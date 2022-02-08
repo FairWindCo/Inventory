@@ -62,8 +62,21 @@ class Server(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name='Запись создана')
     updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usernames', editable=False)
     os_last_update = models.DateTimeField(verbose_name='Время последнего обнолвения', blank=True, null=True)
+    last_update_id = models.CharField(max_length=15, verbose_name='Последние апдейт', blank=True, null=True)
     os_installed = models.DateTimeField(verbose_name='Система установлена', blank=True, null=True)
     version = models.PositiveIntegerField(verbose_name='ver', default=0, editable=False)
+
+    @property
+    def canonical_name(self):
+        return f'{self.name}.{self.domain.name}' if self.domain else self.name
+
+    @property
+    def os_installed_humane(self):
+        return self.os_installed.strftime("%d.%m.%Y %H:%M:%S") if self.os_installed else None
+
+    @property
+    def os_last_update_humane(self):
+        return self.os_last_update.strftime("%d.%m.%Y %H:%M:%S") if self.os_last_update else None
 
     def ip_address_set(self):
         return ' '.join((ip['ip_address'] for ip in self.ip_addresses.values('ip_address')))

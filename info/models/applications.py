@@ -11,7 +11,7 @@ class Application(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название приложения', unique=True)
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
     url = models.CharField(max_length=250, verbose_name='url', blank=True, null=True)
-    responsible = models.ManyToManyField(ResponsiblePerson)
+    responsible = models.ManyToManyField(ResponsiblePerson, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'
