@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from info.models.applications import Application, ServerRole, InstalledSoftware
+from .applications import Application, ServerRole, HostInstalledSoftware, SoftwareCatalog
 
 
 class Domain(models.Model):
@@ -12,6 +12,8 @@ class Domain(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'Справочник Доменов'
+        verbose_name_plural = 'Справочник Доменов'
 
 
 class ServerRoom(models.Model):
@@ -22,6 +24,8 @@ class ServerRoom(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'Справочник Серверных'
+        verbose_name_plural = 'Справочник Серверных'
 
 
 class OS(models.Model):
@@ -32,6 +36,8 @@ class OS(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'Справочник ОС'
+        verbose_name_plural = 'Справочник ОС'
 
 
 class IP(models.Model):
@@ -48,9 +54,10 @@ class Server(models.Model):
     room = models.ForeignKey(ServerRoom, verbose_name='сервреная', on_delete=models.PROTECT)
     virtual_server_name = models.CharField(max_length=50, verbose_name='имя виртуальной машины', blank=True, null=True)
     os_version = models.CharField(max_length=50, verbose_name='Версия ОС', blank=True, null=True)
-    roles = models.ManyToManyField(ServerRole, related_name='servers', blank=True, null=True)
-    applications = models.ManyToManyField(Application, related_name='servers', blank=True, null=True)
-    installed_soft = models.ManyToManyField(InstalledSoftware, related_name='servers', blank=True, null=True)
+    roles = models.ManyToManyField(ServerRole, related_name='servers', blank=True)
+    applications = models.ManyToManyField(Application, related_name='servers', blank=True)
+    installed_soft = models.ManyToManyField(SoftwareCatalog, related_name='servers',
+                                            through=HostInstalledSoftware, blank=True)
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
     has_internet_access = models.BooleanField(verbose_name='Имеет выход в интернет', default=False)
@@ -62,9 +69,11 @@ class Server(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name='Запись создана')
     updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usernames', editable=False)
     os_last_update = models.DateTimeField(verbose_name='Время последнего обнолвения', blank=True, null=True)
+    os_update_search = models.DateTimeField(verbose_name='Время авто поиска обнов.', blank=True, null=True)
     last_update_id = models.CharField(max_length=15, verbose_name='Последние апдейт', blank=True, null=True)
     os_installed = models.DateTimeField(verbose_name='Система установлена', blank=True, null=True)
     version = models.PositiveIntegerField(verbose_name='ver', default=0, editable=False)
+    win_rm_access = models.BooleanField(verbose_name='WinRM доступ', default=True)
 
     @property
     def canonical_name(self):
@@ -90,3 +99,9 @@ class Server(models.Model):
 
     class Meta:
         ordering = ('domain', 'name')
+
+
+class ServerModificationLog(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, verbose_name='Сервер')
+    seen = models.DateTimeField(auto_now_add=True, verbose_name='Дата события')
+    description = models.CharField(max_length=255, verbose_name='Описание')

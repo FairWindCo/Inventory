@@ -1,98 +1,10 @@
-import datetime
+import json
 import re
 
-from urllib3.exceptions import MaxRetryError, NewConnectionError
-from winrm.exceptions import WinRMError, WinRMTransportError, WinRMOperationTimeoutError, AuthenticationError, \
-    BasicAuthDisabledError, InvalidCredentialsError
-import logging
-import winrm
+from remoting.data_type_convertion import UTC_TZ, convert_to_lines, convert_date, LINE_TO_DOTS, convert_date_json
+from remoting.win_remote import *
 
-now = datetime.datetime.now()
-local_now = now.astimezone()
-local_tz = local_now.tzinfo
-
-
-def connect(host, user, password):
-    if host and user:
-        try:
-            return winrm.Session(host, auth=(user, password), transport='ntlm')
-        except BasicAuthDisabledError as e:
-            logging.error(f"REMOTING ERROR: {e}")
-        except InvalidCredentialsError as e:
-            logging.error(f"REMOTING ERROR: {e}")
-        except AuthenticationError as e:
-            logging.error(f"REMOTING ERROR: {e}")
-        except NewConnectionError as e:
-            logging.error(f"cod n`t connect")
-        except ConnectionRefusedError as e:
-            logging.error(f"Connection Refused ERROR: {e}")
-        except ConnectionError as e:
-            logging.error(f"Connection ERROR: {e}")
-        except Exception as e:
-            logging.error(f"ERROR: {e}")
-    else:
-        logging.error(f"NO PASSWORD for {host}")
-
-
-def execute_ps(session, command):
-    if session is None:
-        return None
-    try:
-        res = session.run_ps(command)
-        if res.status_code != 0:
-            logging.warning(f"WARNING REMOTING ERROR: {res.status_code}")
-            return None
-        else:
-            return res.std_out.decode()
-    except WinRMError as e:
-        logging.error(f"REMOTING ERROR: {e}")
-    except WinRMTransportError as e:
-        logging.error(f"REMOTING TRANSPORT ERROR: {e}")
-    except WinRMOperationTimeoutError as e:
-        logging.error(f"REMOTING TIMEOUT ERROR: {e}")
-    except NewConnectionError as e:
-        logging.error(f"cod n`t connect")
-    except ConnectionRefusedError as e:
-        logging.error(f"Connection Refused ERROR: {e}")
-    except ConnectionError as e:
-        logging.error(f"Connection ERROR: {e}")
-    except Exception as e:
-        logging.error(f"ERROR: {e}")
-
-
-def execute_cmd(session, command):
-    if session is None:
-        return None
-    try:
-        res = session.run_cmd(command)
-        if res.status_code != 0:
-            logging.warning(f"WARNING REMOTING ERROR: {res.status_code}")
-            return None
-        else:
-            return res.std_out.decode()
-    except WinRMError as e:
-        logging.error(f"REMOTING ERROR: {e}")
-    except WinRMTransportError as e:
-        logging.error(f"REMOTING TRANSPORT ERROR: {e}")
-    except WinRMOperationTimeoutError as e:
-        logging.error(f"REMOTING TIMEOUT ERROR: {e}")
-    except ConnectionRefusedError as e:
-        logging.error(f"Connection Refused ERROR: {e}")
-    except ConnectionError as e:
-        logging.error(f"Connection ERROR: {e}")
-    except NewConnectionError as e:
-        logging.error(f"cod n`t connect")
-    except Exception as e:
-        logging.error(f"{e}")
-
-
-LINE_BREAK = re.compile(r'([\r\n]|\r|\n])')
-LINE_TO_DOTS = re.compile(r'[\s]+')
-
-
-def convert_to_lines(text):
-    lines = LINE_BREAK.split(text)
-    return [line.strip() for line in lines if line not in ['', '\r', '\n']]
+KB_EXTRACT = re.compile(r'(KB[0-9]{7,10})')
 
 
 def get_system_os_info(session):
@@ -107,36 +19,67 @@ def get_system_os_name(session):
         return convert_to_lines(data)[0]
 
 
-def convert_date(string, formats=None, with_timezone=True):
-    if formats is None:
-        formats = (
-            '%d.%m.%Y',
-            '%m/%d/%Y',
-            '%d/%m/%Y'
-        )
-    for _format in formats:
-        try:
-            dt = datetime.datetime.strptime(string, _format)
-            return dt.astimezone(local_tz) if with_timezone else dt
-        except ValueError:
-            pass
-    print('DON`T CONVERT ', string)
-
-
-def convert_datetime(string, formats=None, with_timezone=True):
-    if formats is None:
-        formats = (
-            '%d.%m.%Y %H:%M:%S',
-            '%m/%d/%Y %I:%M:%S %p',
-        )
-    return convert_date(string, formats, with_timezone)
-
-
-def get_last_update(session):
+def get_last_update_simple(session):
     data = execute_ps(session, '(Get-HotFix | select InstalledOn,HotFixId | sort-object InstalledOn)[-1]')
     if data:
         response = convert_to_lines(data)[2].split(' ')
-        dt = convert_date(response[0])
+        dt = convert_date(response[0], tz=UTC_TZ)
+        kb = response[-1]
+        print(f'Updated {dt} as {response[0]} {kb}')
+        return dt, kb
+    return None, None
+
+
+def get_last_update(session):
+    data = execute_ps(session,
+                      '$m=(Get-HotFix | select InstalledOn,HotFixId | sort-object InstalledOn)[-1]; if($m) {$m[-1]| ConvertTo-Json}')
+    if data:
+        update = json.loads(data)
+        if 'Title' in update:
+            kb = update['HotFixId']
+            dt = convert_date_json(update['InstalledOn']['value'])
+            return dt, kb
+    return None, None
+
+
+def get_updates(session):
+    data = execute_ps(session,
+                      '((New-Object -ComObject Microsoft.Update.Session).CreateupdateSearcher())'
+                      '.Search("IsAssigned=1 and IsHidden=0 and IsInstalled=1 and Type=\'Software\'").Updates '
+                      '| select title, LastDeploymentChangeTime | sort-object LastDeploymentChangeTime)[-1]')
+    if data:
+        response = convert_to_lines(data)[2].split(' ')
+        dt = convert_date(response[0], tz=UTC_TZ)
+        kb = response[-1]
+        print(f'Updated {dt} as {response[0]} {kb}')
+        return dt, kb
+    return None, None
+
+
+def get_last_update_alt(session):
+    data = execute_ps(session, '''$m=((New-Object -ComObject Microsoft.Update.Session).CreateupdateSearcher())\
+.Search("IsAssigned=1 and IsHidden=0 and IsInstalled=1 and Type='Software'").Updates \
+| select title, LastDeploymentChangeTime | sort-object LastDeploymentChangeTime; if($m) {$m[-1]| ConvertTo-Json}''')
+    if data:
+        update = json.loads(data)
+        if 'Title' in update:
+            result = KB_EXTRACT.search(update['Title'])
+            kb = result.group(1) if result else ''
+            dt = convert_date_json(update['LastDeploymentChangeTime'])
+            return dt, kb
+
+    else:
+        return get_last_update(session)
+
+
+def has_update_assigned(session):
+    data = execute_ps(session,
+                      '((New-Object -ComObject Microsoft.Update.Session).CreateupdateSearcher())'
+                      '.Search("IsAssigned=1 and IsHidden=0 and IsInstalled=0 and Type=\'Software\'").Updates '
+                      '| select title')
+    if data:
+        response = convert_to_lines(data)[2].split(' ')
+        dt = convert_date(response[0], tz=UTC_TZ)
         kb = response[-1]
         print(f'Updated {dt} as {response[0]} {kb}')
         return dt, kb
@@ -144,9 +87,22 @@ def get_last_update(session):
 
 
 def get_installed_date(session):
-    data = execute_ps(session, 'gcim Win32_OperatingSystem | select InstallDate')
+    data = execute_ps(session, 'gcim Win32_OperatingSystem | select InstallDate| ConvertTo-Json')
     if data:
-        response = convert_to_lines(data)[2]
-        dt = convert_datetime(response)
-        print(f'Installed {dt} as {data}')
-        return dt
+        installed = json.loads(data)
+        if 'InstallDate' in installed:
+            dt = convert_date_json(installed['InstallDate'])
+            return dt
+
+
+def get_update_dates(session):
+    data = execute_ps(session, '(New-Object -ComObject Microsoft.Update.AutoUpdate).Results | ConvertTo-Json')
+    if data:
+        search_date, install_date = None, None
+        update_info = json.loads(data)
+        if 'LastSearchSuccessDate' in update_info:
+            search_date = convert_date_json(update_info['LastSearchSuccessDate'])
+        if 'LastInstallationSuccessDate' in update_info:
+            install_date = convert_date_json(update_info['LastInstallationSuccessDate'])
+        return search_date, install_date
+    return None, None

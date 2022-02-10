@@ -12,8 +12,8 @@ class ServerAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     list_display = ('room', 'domain', 'ip_address_set',
                     'name', 'virtual_server_name', 'os_name', 'os_version', 'is_online')
-    autocomplete_fields = ('domain', 'room', 'os_name', 'ip_addresses', 'installed_soft', 'roles', 'applications')
-    filter_horizontal = ('ip_addresses', 'installed_soft', 'roles', 'applications')
+    autocomplete_fields = ('domain', 'room', 'os_name', 'ip_addresses', 'roles', 'applications')
+    filter_horizontal = ('ip_addresses', 'roles', 'applications')
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name', 'applications__name')
 
@@ -50,8 +50,9 @@ class ServerAdminProxy(Server):
 
 class ServerViewAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
-    list_display = ('name', 'domain', 'os_installed_humane',
-                    'os_name', 'os_version', 'os_last_update_humane', 'days_from_update', 'last_update_id')
+    list_display = ('name', 'domain', 'os_installed',
+                    'os_name', 'os_version', 'os_last_update', 'days_from_update',
+                    'os_update_search', 'last_update_id')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name')
@@ -85,7 +86,7 @@ class ApplicationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Application, ApplicationAdmin)
-admin.site.register(InstalledSoftware, SimpleNameAdmin)
+admin.site.register(SoftwareCatalog, SimpleNameAdmin)
 admin.site.register(IP, IPAdmin)
 admin.site.register(OS, SimpleNameAdmin)
 admin.site.register(Domain, SimpleNameAdmin)

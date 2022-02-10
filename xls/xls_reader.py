@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(BASE_DIR, os.pardir)))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'Inventarisation.settings'
 django.setup()
 
-from info.models import ServerRoom, Domain, IP, InstalledSoftware, OS, Server
+from info.models import ServerRoom, Domain, IP, SoftwareCatalog, OS, Server
 from django.contrib.auth.models import User
 
 
@@ -125,12 +125,12 @@ class SoftManager(BaseManager):
 
     def find_in_db(self, name):
         try:
-            return InstalledSoftware.objects.get(name=name)
-        except InstalledSoftware.DoesNotExist:
+            return SoftwareCatalog.objects.get(name=name)
+        except SoftwareCatalog.DoesNotExist:
             return None
 
     def create_in_db(self, name):
-        soft = InstalledSoftware(name=name)
+        soft = SoftwareCatalog(name=name)
         soft.save()
         return soft
 

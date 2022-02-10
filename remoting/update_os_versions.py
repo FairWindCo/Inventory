@@ -1,53 +1,58 @@
-import django
-import os
-import sys
+from remoting.django_execute import execute_in_django
 
-from remoting.get_system_version import *
-from xls.xls_reader import OSManager
-from dotenv import load_dotenv
 
-load_dotenv()
-
-USER_NAME = os.getenv('USER_NAME')
-USER_PASS = os.getenv('USER_PASS')
-
-if __name__ == '__main__':
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.append(os.path.abspath(BASE_DIR))
-    sys.path.append(os.path.abspath(os.path.join(BASE_DIR, os.pardir)))
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'Inventarisation.settings'
-
-    django.setup()
-    from info.models import Server
-
-    os = OSManager()
-    for server in Server.objects.filter(is_online=True).all():
-        print(server.canonical_name)
-        s = connect(server.canonical_name, USER_NAME, USER_PASS)
+def update_general_host_info(host, user_name, password, os_manager):
+    import logging
+    from remoting.get_system_version import connect, get_system_os_info, get_last_update, get_installed_date, \
+        get_system_os_name
+    if host:
+        print(host.canonical_name)
+        s = connect(host.canonical_name, user_name, password)
         if s:
-            modif = False
-            if not server.os_name or not server.os_version:
+            need_update = False
+            if not host.os_name or not host.os_version:
                 win_name = get_system_os_name(s)
                 if win_name:
-                    win = os.get_value(win_name)
-                    if server.os_name != win:
-                        server.os_name = win
-                        modif = True
-                    if not server.os_version:
-                        server.os_version = get_system_os_info(s)
-                        modif = True
-            #if server.os_installed is None:
-            server.os_installed = get_installed_date(s)
-            modif = True
+                    win = os_manager.get_value(win_name)
+                    if host.os_name != win:
+                        host.os_name = win
+                        need_update = True
+                    if not host.os_version:
+                        host.os_version = get_system_os_info(s)
+                        need_update = True
+            if host.os_installed is None:
+                host.os_installed = get_installed_date(s)
+                need_update = True
 
             update_date, kb_id = get_last_update(s)
             if update_date:
-                if server.os_last_update is None or server.os_last_update < update_date:
-                    server.os_last_update = update_date
-                    server.last_update_id = kb_id
-                    modif = True
-
-            if modif:
-                server.save()
+                if host.os_last_update is None or host.os_last_update < update_date:
+                    host.os_last_update = update_date
+                    host.last_update_id = kb_id
+                    need_update = True
+            if need_update:
+                host.save()
         else:
-            logging.warning(f"D`ONT CONNECT {server}")
+            logging.warning(f"D`ONT CONNECT {host}")
+    else:
+        logging.warning(f"NO SERVER")
+
+
+def all_servers_get_os_info(username, password):
+    from xls.xls_reader import OSManager
+    from info.models import Server
+
+    os_manager = OSManager()
+    for server in Server.objects.filter(is_online=True, win_rm_access=True).all():
+        update_general_host_info(server, username, password, os_manager)
+
+
+if __name__ == '__main__':
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    USER_NAME = os.getenv('USER_NAME')
+    USER_PASS = os.getenv('USER_PASS')
+    execute_in_django(lambda: all_servers_get_os_info(USER_NAME, USER_PASS))

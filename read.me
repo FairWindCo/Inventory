@@ -1,0 +1,22 @@
+winrm get winrm/config
+
+Set-PSSessionConfiguration -Name Microsoft.PowerShell -ShowSecurityDescriptorUI -Force
+
+Enable-PSRemoting
+winrm quickconfig
+netsh advfirewall firewall add rule name="WinRM-HTTP" dir=in localport=5985 protocol=TCP action=allow
+netsh advfirewall firewall add rule name="WinRM-HTTPS" dir=in localport=5986 protocol=TCP action=allow
+
+
+netsh winhttp import proxy source=ie
+Как вариант возможна также ситуация, когда необходимо перенаправить весь трафик, кроме трафика на Microsoft (системные обновления, активация) на прокси-сервер, тогда можно воспользоваться следующей командой обхода прокси для обновлений Windows.
+
+Сделайте обход прокси для активации и обновлений вот так:
+
+netsh winhttp set proxy proxy-server="your-proxy-srv:3128" bypass-list="*.windowsupdate.com;*.microsoft.com"
+Текущие настройки WinHttp можно посмотреть командой:
+
+netsh winhttp show proxy
+Сбросить же настройки прокси сервера можно при помощи команды:
+
+Netsh winhttp reset proxy
