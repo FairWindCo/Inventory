@@ -1,4 +1,5 @@
 from remoting.django_execute import execute_in_django
+from remoting.get_system_version import get_update_dates
 
 
 def update_general_host_info(host, user_name, password, os_manager):
@@ -23,17 +24,22 @@ def update_general_host_info(host, user_name, password, os_manager):
             if host.os_installed is None:
                 host.os_installed = get_installed_date(s)
                 need_update = True
-
-            update_date, kb_id = get_last_update(s)
-            if update_date:
-                if host.os_last_update is None or host.os_last_update < update_date:
-                    host.os_last_update = update_date
+            search_date, install_date = get_update_dates(s)
+            if search_date and (host.os_update_search is None or host.os_update_search < search_date):
+                host.os_update_search = search_date
+                need_update = True
+            if install_date and (host.os_last_update is None or host.os_last_update < install_date):
+                host.os_last_update = install_date
+                _, kb_id = get_last_update(s)
+                print(kb_id)
+                if kb_id:
                     host.last_update_id = kb_id
-                    need_update = True
+                need_update = True
+
             if need_update:
                 host.save()
         else:
-            logging.warning(f"D`ONT CONNECT {host}")
+            logging.warning(f"DON`T CONNECT {host}")
     else:
         logging.warning(f"NO SERVER")
 

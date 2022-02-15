@@ -1,50 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from .applications import Application, ServerRole, HostInstalledSoftware, SoftwareCatalog
-
-
-class Domain(models.Model):
-    name = models.CharField(max_length=100, verbose_name='имя домена', unique=True)
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Справочник Доменов'
-        verbose_name_plural = 'Справочник Доменов'
-
-
-class ServerRoom(models.Model):
-    name = models.CharField(max_length=100, verbose_name='имя домена', unique=True)
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Справочник Серверных'
-        verbose_name_plural = 'Справочник Серверных'
-
-
-class OS(models.Model):
-    name = models.CharField(max_length=100, verbose_name='название ОС', unique=True)
-
-    def __str__(self):
-        return f'{self.name}'
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Справочник ОС'
-        verbose_name_plural = 'Справочник ОС'
-
-
-class IP(models.Model):
-    ip_address = models.GenericIPAddressField(verbose_name='IP адресс', unique=True)
-
-    def __str__(self):
-        return f'{self.ip_address}'
+from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture
+from .applications import HostInstalledSoftware
 
 
 class Server(models.Model):
@@ -54,8 +12,9 @@ class Server(models.Model):
     room = models.ForeignKey(ServerRoom, verbose_name='сервреная', on_delete=models.PROTECT)
     virtual_server_name = models.CharField(max_length=50, verbose_name='имя виртуальной машины', blank=True, null=True)
     os_version = models.CharField(max_length=50, verbose_name='Версия ОС', blank=True, null=True)
-    roles = models.ManyToManyField(ServerRole, related_name='servers', blank=True)
-    applications = models.ManyToManyField(Application, related_name='servers', blank=True)
+    futures = models.ManyToManyField(ServerFuture, related_name='servers', blank=True)
+    # roles = models.ManyToManyField(ServerRole, related_name='servers', blank=True)
+    # applications = models.ManyToManyField(Application, related_name='servers', blank=True)
     installed_soft = models.ManyToManyField(SoftwareCatalog, related_name='servers',
                                             through=HostInstalledSoftware, blank=True)
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
@@ -101,7 +60,3 @@ class Server(models.Model):
         ordering = ('domain', 'name')
 
 
-class ServerModificationLog(models.Model):
-    server = models.ForeignKey(Server, on_delete=models.CASCADE, verbose_name='Сервер')
-    seen = models.DateTimeField(auto_now_add=True, verbose_name='Дата события')
-    description = models.CharField(max_length=255, verbose_name='Описание')

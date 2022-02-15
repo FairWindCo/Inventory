@@ -1,11 +1,12 @@
 winrm get winrm/config
-
 Set-PSSessionConfiguration -Name Microsoft.PowerShell -ShowSecurityDescriptorUI -Force
+
 
 Enable-PSRemoting
 winrm quickconfig
 netsh advfirewall firewall add rule name="WinRM-HTTP" dir=in localport=5985 protocol=TCP action=allow
 netsh advfirewall firewall add rule name="WinRM-HTTPS" dir=in localport=5986 protocol=TCP action=allow
+
 
 
 netsh winhttp import proxy source=ie

@@ -12,7 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(BASE_DIR, os.pardir)))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'Inventarisation.settings'
 django.setup()
 
-from info.models import ServerRoom, Domain, IP, SoftwareCatalog, OS, Server
+from info.models import Server
+from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture
 from django.contrib.auth.models import User
 
 
@@ -25,30 +26,30 @@ class BaseManager:
     def clean_name(self, name):
         return name.strip()
 
-    def get_value(self, name):
+    def get_value(self, name, **kwargs):
         if not self.check_name(name):
             return None
         name = self.clean_name(name)
         value = self.cache.get(name, None)
         if value:
             return value
-        value = self.get_from_db(name)
+        value = self.get_from_db(name, **kwargs)
         if value:
             self.cache[name] = value
         return value
 
     def find_in_db(self, name):
-        pass
+        return None
 
-    def create_in_db(self, name):
-        pass
+    def create_in_db(self, name, *args, **kwargs):
+        return None
 
-    def get_from_db(self, name):
+    def get_from_db(self, name, **kwargs):
         value = self.find_in_db(name)
         if value:
             return value
         else:
-            return self.create_in_db(name)
+            return self.create_in_db(name, **kwargs)
 
 
 class RoomManager(BaseManager):
@@ -72,7 +73,7 @@ class RoomManager(BaseManager):
         except ServerRoom.DoesNotExist:
             return None
 
-    def create_in_db(self, name):
+    def create_in_db(self, name, **kwargs):
         room = ServerRoom(name=name)
         room.save()
         return room
@@ -89,7 +90,7 @@ class DomainManager(BaseManager):
         except Domain.DoesNotExist:
             return None
 
-    def create_in_db(self, name):
+    def create_in_db(self, name, **kwargs):
         domain = Domain(name=name)
         domain.save()
         return domain
@@ -115,7 +116,7 @@ class IPManager(BaseManager):
         except IP.DoesNotExist:
             return None
 
-    def create_in_db(self, name):
+    def create_in_db(self, name, **kwargs):
         ip = IP(ip_address=name)
         ip.save()
         return ip
@@ -129,8 +130,25 @@ class SoftManager(BaseManager):
         except SoftwareCatalog.DoesNotExist:
             return None
 
-    def create_in_db(self, name):
+    def create_in_db(self, name, **kwargs):
         soft = SoftwareCatalog(name=name)
+        soft.save()
+        return soft
+
+
+class FutureManager(BaseManager):
+
+    def find_in_db(self, name, **kwargs):
+        try:
+            return ServerFuture.objects.get(name=name)
+        except ServerFuture.DoesNotExist:
+            return None
+
+    def create_in_db(self, name, **kwargs):
+        if 'description' in kwargs:
+            soft = ServerFuture(name=name, display_name=kwargs['description'])
+        else:
+            soft = ServerFuture(name=name, **kwargs)
         soft.save()
         return soft
 
@@ -162,7 +180,7 @@ class OSManager(BaseManager):
         except OS.DoesNotExist:
             return None
 
-    def create_in_db(self, name):
+    def create_in_db(self, name, **kwargs):
         os = OS(name=name)
         os.save()
         return os
