@@ -1,10 +1,10 @@
-import re
-
-from openpyxl import load_workbook
 import os
+import re
 import sys
+from threading import RLock
 
 import django
+from openpyxl import load_workbook
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, os.pardir)))
@@ -19,6 +19,7 @@ from django.contrib.auth.models import User
 
 class BaseManager:
     cache = {}
+    lock = RLock()
 
     def check_name(self, name):
         return True if name and name is not None else False
@@ -27,16 +28,17 @@ class BaseManager:
         return name.strip()
 
     def get_value(self, name, **kwargs):
-        if not self.check_name(name):
-            return None
-        name = self.clean_name(name)
-        value = self.cache.get(name, None)
-        if value:
+        with self.lock:
+            if not self.check_name(name):
+                return None
+            name = self.clean_name(name)
+            value = self.cache.get(name, None)
+            if value:
+                return value
+            value = self.get_from_db(name, **kwargs)
+            if value:
+                self.cache[name] = value
             return value
-        value = self.get_from_db(name, **kwargs)
-        if value:
-            self.cache[name] = value
-        return value
 
     def find_in_db(self, name):
         return None

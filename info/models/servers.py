@@ -13,8 +13,6 @@ class Server(models.Model):
     virtual_server_name = models.CharField(max_length=50, verbose_name='имя виртуальной машины', blank=True, null=True)
     os_version = models.CharField(max_length=50, verbose_name='Версия ОС', blank=True, null=True)
     futures = models.ManyToManyField(ServerFuture, related_name='servers', blank=True)
-    # roles = models.ManyToManyField(ServerRole, related_name='servers', blank=True)
-    # applications = models.ManyToManyField(Application, related_name='servers', blank=True)
     installed_soft = models.ManyToManyField(SoftwareCatalog, related_name='servers',
                                             through=HostInstalledSoftware, blank=True)
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
@@ -57,6 +55,6 @@ class Server(models.Model):
         return f'{self.name}'
 
     class Meta:
+        verbose_name = 'Сервер'
+        verbose_name_plural = 'Серверы'
         ordering = ('domain', 'name')
-
-

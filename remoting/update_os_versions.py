@@ -1,13 +1,14 @@
-from remoting.django_execute import execute_in_django
+from remoting.executor import run_commandline_args
 from remoting.get_system_version import get_update_dates
 
 
-def update_general_host_info(host, user_name, password, os_manager):
+def update_general_host_info(host, user_name, password, os_manager, debug=False):
     import logging
-    from remoting.get_system_version import connect, get_system_os_info, get_last_update, get_installed_date, \
+    from remoting.get_system_version import connect, get_system_os_info_full, get_last_update, get_installed_date, \
         get_system_os_name
     if host:
-        print(host.canonical_name)
+        if debug:
+            print(host.canonical_name)
         s = connect(host.canonical_name, user_name, password)
         if s:
             need_update = False
@@ -19,7 +20,7 @@ def update_general_host_info(host, user_name, password, os_manager):
                         host.os_name = win
                         need_update = True
                     if not host.os_version:
-                        host.os_version = get_system_os_info(s)
+                        host.os_version = get_system_os_info_full(s)
                         need_update = True
             if host.os_installed is None:
                 host.os_installed = get_installed_date(s)
@@ -44,21 +45,8 @@ def update_general_host_info(host, user_name, password, os_manager):
         logging.warning(f"NO SERVER")
 
 
-def all_servers_get_os_info(username, password):
+if __name__ == '__main__':
     from xls.xls_reader import OSManager
-    from info.models import Server
 
     os_manager = OSManager()
-    for server in Server.objects.filter(is_online=True, win_rm_access=True).all():
-        update_general_host_info(server, username, password, os_manager)
-
-
-if __name__ == '__main__':
-    import os
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
-    USER_NAME = os.getenv('USER_NAME')
-    USER_PASS = os.getenv('USER_PASS')
-    execute_in_django(lambda: all_servers_get_os_info(USER_NAME, USER_PASS))
+    run_commandline_args(update_general_host_info, os_manager, name='Update Os info')

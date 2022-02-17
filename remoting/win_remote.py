@@ -1,8 +1,12 @@
+import json
+
 from urllib3.exceptions import NewConnectionError
 from winrm.exceptions import WinRMError, WinRMTransportError, WinRMOperationTimeoutError, AuthenticationError, \
     BasicAuthDisabledError, InvalidCredentialsError
 import logging
 import winrm
+
+from remoting.data_type_convertion import convert_to_lines
 
 
 class MySession(winrm.Session):
@@ -99,3 +103,13 @@ def execute_cmd(session, command, codepage='cp866'):
         logging.error(f"{e}")
 
 
+def powershell(session, command):
+    data = execute_ps(session, command, codepage='cp866')
+    if data:
+        return convert_to_lines(data)
+
+
+def powershell_json(session, command):
+    data = execute_ps(session, command, codepage='cp866')
+    if data:
+        return json.loads(data)

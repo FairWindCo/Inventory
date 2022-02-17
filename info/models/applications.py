@@ -18,26 +18,39 @@ class Application(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название приложения', unique=True)
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
     url = models.CharField(max_length=250, verbose_name='url', blank=True, null=True)
-    monitoring_url = models.CharField(max_length=250, verbose_name='url', blank=True, null=True)
-    worked_servers = models.ManyToManyField("Server", related_name='servers', blank=True, through="ApplicationServers")
-    responsible = models.ManyToManyField(ResponsiblePerson)
+    monitoring_url = models.CharField(max_length=250, verbose_name='Мониторинг url', blank=True, null=True)
+    worked_servers = models.ManyToManyField("Server", related_name='applications', blank=True,
+                                            through="ApplicationServers")
+    responsible = models.ManyToManyField(ResponsiblePerson, blank=True)
 
     def __str__(self):
         return f'{self.name}'
 
+    class Meta:
+        verbose_name = 'Приложение'
+        verbose_name_plural = 'Приложения'
+        ordering = ('name',)
+
 
 class ApplicationServers(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, verbose_name='Программа')
-    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер')
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, verbose_name='Программа',
+                                    related_name='app_server')
+    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='app_info')
     role = models.ForeignKey(ServerRole, on_delete=models.CASCADE, verbose_name='Роль', blank=True, null=True)
     response = models.ForeignKey(ServerResponse, on_delete=models.CASCADE, verbose_name='Ответственнность', blank=True,
                                  null=True)
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Сервер для Приложения'
+        verbose_name_plural = 'Сервера для Приложения'
+        ordering = ('server__name', 'application__name')
+
 
 class HostInstalledSoftware(models.Model):
-    soft = models.ForeignKey(SoftwareCatalog, on_delete=models.CASCADE, verbose_name='Программа')
-    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер')
+    soft = models.ForeignKey(SoftwareCatalog, on_delete=models.CASCADE, verbose_name='Программа',
+                             related_name='installs')
+    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='host_soft')
     version = models.CharField(max_length=200, verbose_name='Версия')
     installation_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата установки')
     last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата проверки')

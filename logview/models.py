@@ -12,3 +12,6 @@ class ServerModificationLog(models.Model):
     class Meta:
         verbose_name = 'Журнал'
         verbose_name_plural = 'Журнал'
+
+    def __str__(self):
+        return f'{self.seen.strftime("%d.%m.%y %H:%M:%S")} {self.server.name}'

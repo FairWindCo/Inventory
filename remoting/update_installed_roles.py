@@ -1,16 +1,15 @@
-import datetime
-
-from remoting.django_execute import execute_in_django
+from remoting import run_commandline_args
 
 
-def update_future_info(host, user_name, password, futures_manager):
+def update_future_info(host, user_name, password, futures_manager, debug=False):
     import logging
     from remoting.get_system_version import connect
     from remoting.get_software import get_server_installed_futures
     from logview.models import ServerModificationLog
 
     if host:
-        print(host.canonical_name)
+        if debug:
+            print(host.canonical_name)
         s = connect(host.canonical_name, user_name, password)
         installed_roles = set(host.futures.all())
         if s:
@@ -31,21 +30,9 @@ def update_future_info(host, user_name, password, futures_manager):
         logging.warning(f"NO SERVER")
 
 
-def all_servers_get_os_info(username, password):
+if __name__ == '__main__':
     from xls.xls_reader import FutureManager
-    from info.models import Server
 
     futures = FutureManager()
-    for server in Server.objects.filter(is_online=True, win_rm_access=True).all():
-        update_future_info(server, username, password, futures)
 
-
-if __name__ == '__main__':
-    import os
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
-    USER_NAME = os.getenv('USER_NAME')
-    USER_PASS = os.getenv('USER_PASS')
-    execute_in_django(lambda: all_servers_get_os_info(USER_NAME, USER_PASS))
+    run_commandline_args(update_future_info, futures, name='Update Server Roles')

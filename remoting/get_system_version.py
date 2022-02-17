@@ -1,7 +1,6 @@
-import json
 import re
 
-from remoting.data_type_convertion import UTC_TZ, convert_to_lines, convert_date, LINE_TO_DOTS, convert_date_json
+from remoting.data_type_convertion import UTC_TZ, convert_date, LINE_TO_DOTS, convert_date_json
 from remoting.win_remote import *
 
 KB_EXTRACT = re.compile(r'(KB[0-9]{7,10})')
@@ -11,6 +10,12 @@ def get_system_os_info(session):
     data = execute_ps(session, '[System.Environment]::OSVersion.Version')
     if data:
         return LINE_TO_DOTS.sub('.', convert_to_lines(data)[2])
+
+
+def get_system_os_info_full(session):
+    data = execute_ps(session, '(Get-ItemProperty -Path c:\windows\system32\hal.dll).VersionInfo.FileVersion')
+    if data:
+        return convert_to_lines(data)[0].split(' ')[0]
 
 
 def get_system_os_name(session):
@@ -96,10 +101,10 @@ def get_installed_date(session):
 
 
 def get_update_dates(session):
-    data = execute_ps(session, '(New-Object -ComObject Microsoft.Update.AutoUpdate).Results | ConvertTo-Json')
-    if data:
+    update_info = powershell_json(session,
+                                  '(New-Object -ComObject Microsoft.Update.AutoUpdate).Results | ConvertTo-Json')
+    if update_info:
         search_date, install_date = None, None
-        update_info = json.loads(data)
         if 'LastSearchSuccessDate' in update_info:
             search_date = convert_date_json(update_info['LastSearchSuccessDate'])
         if 'LastInstallationSuccessDate' in update_info:

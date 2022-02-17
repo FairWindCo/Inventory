@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import display
 
 
 class ApplicationAdmin(admin.ModelAdmin):
@@ -7,9 +8,35 @@ class ApplicationAdmin(admin.ModelAdmin):
     fields = ['name', 'description', 'url', 'responsible']
     autocomplete_fields = ('responsible',)
     filter_horizontal = ('responsible',)
+    save_as = True
 
 
 class ApplicationServerAdmin(admin.ModelAdmin):
     search_fields = ('application__name', 'server__name')
-    # list_filter = ('name',)
+    list_display = ('display_application', 'display_server', 'display_role', 'display_response', 'display_note')
+    list_filter = ('application__name',)
     autocomplete_fields = ('application', 'server', 'role', 'response')
+    save_as = True
+
+    @display(description='Сервер')
+    def display_server(self, obj):
+        return obj.server.name
+
+    @display(description='Приложение')
+    def display_application(self, obj):
+        return obj.application.name
+
+    @display(description='Роль')
+    def display_role(self, obj):
+        return obj.role.name if obj.role else '-'
+
+    @display(description='Ответственность')
+    def display_response(self, obj):
+        return obj.response.name if obj.response else '-'
+
+    @display(description='Примечание')
+    def display_note(self, obj):
+        if len(obj.description) > 40:
+            return f'{obj.description[:40]}...'
+        else:
+            return obj.description

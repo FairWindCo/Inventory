@@ -8,7 +8,9 @@ class HostInstalledSoftwareAdmin(admin.ModelAdmin):
     search_fields = ('server__name', 'soft__name')
     sortable_by = ('get_server_name', 'get_soft_name')
     ordering = ('server__name', 'soft__name')
+    autocomplete_fields = ('server', 'soft')
     list_filter = ('server__name', )
+    save_as = True
 
     @display(ordering='name', description='Server')
     def get_server_name(self, obj):

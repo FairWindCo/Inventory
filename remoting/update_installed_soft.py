@@ -1,9 +1,7 @@
-import datetime
-
-from remoting.django_execute import execute_in_django
+from remoting.executor import run_commandline_args
 
 
-def update_software_info(host, user_name, password, soft_manager):
+def update_software_info(host, user_name, password, soft_manager, debug=False):
     import logging
     from remoting.get_system_version import connect
     from remoting.get_software import get_installed_software
@@ -12,12 +10,14 @@ def update_software_info(host, user_name, password, soft_manager):
     from django.utils.timezone import now
 
     if host:
-        print(host.canonical_name)
+        if debug:
+            print(host.canonical_name)
         s = connect(host.canonical_name, user_name, password)
         installed_soft = set(host.hostinstalledsoftware_set.all())
         if s:
             for sof_name, install_date, version in get_installed_software(s):
-                print(sof_name, install_date, version)
+                if debug:
+                    print(sof_name, install_date, version)
                 soft = soft_manager.get_value(sof_name)
                 if soft:
                     try:
@@ -48,23 +48,8 @@ def update_software_info(host, user_name, password, soft_manager):
         logging.warning(f"NO SERVER")
 
 
-def all_servers_get_os_info(username, password):
+if __name__ == '__main__':
     from xls.xls_reader import SoftManager
-    from info.models import Server
 
     soft = SoftManager()
-    for server in Server.objects.filter(is_online=True, win_rm_access=True).order_by('name').all()[24:]:
-        update_software_info(server, username, password, soft)
-    # server = Server.objects.get(name='BT01')
-    # update_software_info(server, username, password, soft)
-
-
-if __name__ == '__main__':
-    import os
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
-    USER_NAME = os.getenv('USER_NAME')
-    USER_PASS = os.getenv('USER_PASS')
-    execute_in_django(lambda: all_servers_get_os_info(USER_NAME, USER_PASS))
+    run_commandline_args(update_software_info, soft, name='Update Soft info')
