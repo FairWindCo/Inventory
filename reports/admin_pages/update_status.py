@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 
 from info.models import Server
+from remoting import run, update_update_date
 
 
 class ServerAdminProxy(Server):
@@ -30,6 +31,11 @@ class ServerAdminProxy(Server):
             return 'нет данных'
 
 
+@admin.action(description='Update Status refresh')
+def make_refresh(modeladmin, request, queryset):
+    run(update_update_date, server_list=queryset.all())
+
+
 class ServerViewAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     list_display = ('name', 'domain', 'os_installed',
@@ -38,6 +44,7 @@ class ServerViewAdmin(admin.ModelAdmin):
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name')
+    actions = [make_refresh]
 
     def get_search_results(self, request, queryset, search_term):
         return super().get_search_results(request, queryset, search_term)

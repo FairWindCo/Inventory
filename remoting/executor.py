@@ -25,6 +25,11 @@ def get_active_server():
     return Server.objects.filter(is_online=True, win_rm_access=True).all()
 
 
+def get_servers_from_ids(ids_list):
+    from info.models import Server
+    return Server.objects.filter(id__in=ids_list).all()
+
+
 def run(command, *args, debug=False, server_list=None, user_name=None, password=None,
         use_active_server=True,
         use_multi_threading=True):
