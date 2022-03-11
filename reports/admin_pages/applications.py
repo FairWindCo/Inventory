@@ -3,6 +3,7 @@ from django.contrib.admin import display
 from django.utils.safestring import mark_safe
 
 from info.models.applications import ApplicationServers, Application
+from reports.admin_pages.servers_infos import ServerResponseInfoAdmin
 
 
 class AppInfoAdminProxy(ApplicationServers):
@@ -46,8 +47,10 @@ class ApplicationInfoAdmin(admin.ModelAdmin):
 class ApplicationServerInfoAdmin(admin.ModelAdmin):
     search_fields = ('application__name', 'server__name')
     list_display = (
-        'display_application', 'display_server', 'display_url', 'display_role', 'display_response', 'display_note')
+        'display_application', 'display_server', 'display_url', 'display_note')
     list_filter = ('application__name', 'server__name',)
+
+    inlines = [ServerResponseInfoAdmin]
 
     @display(description='Сервер')
     def display_server(self, obj):

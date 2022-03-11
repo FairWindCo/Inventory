@@ -17,7 +17,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     list_display = ('room', 'domain', 'ip_address_set',
                     'name', 'virtual_server_name', 'os_name', 'os_version', 'is_online', 'os_last_update')
     readonly_fields = ('show_configuration', 'show_application', 'show_soft', 'show_roles')
-    exclude = ('futures', )
+    exclude = ('futures',)
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name', 'applications__name')
@@ -42,11 +42,14 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     @display(description='Приложения')
     def show_application(self, obj):
         infos = []
-        for app in obj.applications.all():
-            server_info = app.app_server.get(server=obj)
-            infos.append(f'{app.name} - '
-                         f'{server_info.response}'
-                         f' ({server_info.role})')
+        for app in obj.app_info.all():
+            for spec in app.specification.all():
+                print(app.application.name)
+                print(spec.response.name)
+                print(spec.role.name)
+                infos.append(f'{app.application.name} - '
+                             f'{spec.response.name}'
+                             f' ({spec.role.name})')
         return mark_safe('<BR>'.join(infos))
 
     @display(description='Программы')
@@ -59,7 +62,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     def show_roles(self, obj):
         infos = [f'{app.name} - {app.display_name}'
                  for app in obj.futures.all()]
-        print(infos)
+        # print(infos)
         return mark_safe('<BR>'.join(infos))
 
     def has_add_permission(self, request):

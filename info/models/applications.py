@@ -32,14 +32,35 @@ class Application(models.Model):
         ordering = ('name',)
 
 
-class ApplicationServers(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, verbose_name='Программа',
-                                    related_name='app_server')
-    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='app_info')
+class ApplicationServersSpecification(models.Model):
+    application_server = models.ForeignKey("ApplicationServers", on_delete=models.CASCADE, verbose_name='Назначение',
+                                           related_name='specification')
     role = models.ForeignKey(ServerRole, on_delete=models.CASCADE, verbose_name='Роль', blank=True, null=True)
     response = models.ForeignKey(ServerResponse, on_delete=models.CASCADE, verbose_name='Ответственнность', blank=True,
                                  null=True)
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
+    response_person = models.ForeignKey(ResponsiblePerson, on_delete=models.CASCADE,
+                                        verbose_name='Отвественный сотрудник', blank=True,
+                                        null=True)
+
+    def __str__(self):
+        return f'{self.application_server.application}'
+
+    class Meta:
+        verbose_name = 'Зона ответственности'
+        verbose_name_plural = 'Зоны ответственности'
+
+
+class ApplicationServers(models.Model):
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, verbose_name='Программа',
+                                    related_name='app_server')
+    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='app_info')
+    specifications = models.ManyToManyField(ServerRole, verbose_name='Назначение', blank=True,
+                                            through=ApplicationServersSpecification)
+    description = models.TextField(verbose_name='Описание', blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.server.name} - {self.application.name}'
 
     class Meta:
         verbose_name = 'Сервер для Приложения'

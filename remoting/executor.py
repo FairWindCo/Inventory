@@ -1,7 +1,7 @@
 import argparse
 import concurrent.futures
 
-from .django_execute import execute_in_django
+from remoting.django_execute import execute_in_django
 
 
 def run_on_servers_one(username, password, server_list, command, *args, debug=False):
@@ -32,7 +32,8 @@ def get_servers_from_ids(ids_list):
 
 def run(command, *args, debug=False, server_list=None, user_name=None, password=None,
         use_active_server=True,
-        use_multi_threading=True):
+        use_multi_threading=True,
+        execute_django=False):
     import os
     from dotenv import load_dotenv
 
@@ -40,7 +41,9 @@ def run(command, *args, debug=False, server_list=None, user_name=None, password=
     user = user_name if user_name else os.getenv('USER_NAME')
     password = password if password else os.getenv('USER_PASS')
 
-    if use_multi_threading:
+    if execute_django:
+        return execute_in_django(command)
+    elif use_multi_threading:
         def exec_command():
             if server_list is None:
                 servers = get_active_server() if use_active_server else get_all_server()
@@ -65,6 +68,8 @@ def run_commandline_args(command, *args, name='', default_active_server=True):
     parser.add_argument('-s', '--servers', action='append', help='Список серверов')
     parser.add_argument('-m', '--multi_threading', action=argparse.BooleanOptionalAction, default=True,
                         help='Multi Threading')
+    parser.add_argument('-n', '--django', action=argparse.BooleanOptionalAction, default=False,
+                        help='Execute in django')
     parser.add_argument('-a', '--only_active', action=argparse.BooleanOptionalAction, default=default_active_server,
                         help='Use default as active servers')
     parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, default=False,
@@ -82,4 +87,5 @@ def run_commandline_args(command, *args, name='', default_active_server=True):
         user_name=arguments.user,
         password=arguments.password,
         use_active_server=arguments.only_active,
-        use_multi_threading=arguments.multi_threading)
+        use_multi_threading=arguments.multi_threading,
+        execute_django=arguments.django)
