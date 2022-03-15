@@ -66,13 +66,13 @@ def run_commandline_args(command, *args, name='', default_active_server=True):
     parser.add_argument('-u', '--user', type=str, default=None, help='Имя пользователя для логина на сервер')
     parser.add_argument('-p', '--password', type=str, default=None, help='Пароль пользователя для логина на сервер')
     parser.add_argument('-s', '--servers', action='append', help='Список серверов')
-    parser.add_argument('-m', '--multi_threading', action=argparse.BooleanOptionalAction, default=True,
+    parser.add_argument('-m', '--multi_threading', action='store_true',
                         help='Multi Threading')
-    parser.add_argument('-n', '--django', action=argparse.BooleanOptionalAction, default=False,
+    parser.add_argument('-n', '--django', action='store_false',
                         help='Execute in django')
-    parser.add_argument('-a', '--only_active', action=argparse.BooleanOptionalAction, default=default_active_server,
+    parser.add_argument('-a', '--only_active', action='store_true',
                         help='Use default as active servers')
-    parser.add_argument('-d', '--debug', action=argparse.BooleanOptionalAction, default=False,
+    parser.add_argument('-d', '--debug', action='store_false',
                         help='verbose output')
     parser.add_argument('-c', '--command', type=str, default=None, help='Имя команды')
 
