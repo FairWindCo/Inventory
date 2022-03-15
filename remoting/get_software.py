@@ -1,8 +1,8 @@
 import datetime
 import re
 
-from remoting.data_type_convertion import LOCAL_TZ
-from remoting.win_remote import *
+from .data_type_convertion import LOCAL_TZ
+from .win_remote import *
 
 
 def get_installed_software(session):

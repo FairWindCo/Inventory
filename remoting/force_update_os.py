@@ -1,9 +1,9 @@
-from remoting.django_execute import execute_in_django
+from .django_execute import execute_in_django
 
 
 def update_general_host_info(host, user_name, password):
     import logging
-    from remoting.get_system_version import connect, get_system_os_info, get_last_update_alt
+    from .get_system_version import connect, get_system_os_info, get_last_update_alt
     if host:
         print(host.canonical_name)
         s = connect(host.canonical_name, user_name, password)

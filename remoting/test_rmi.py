@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 
-from remoting.get_system_version import connect, get_system_os_info, get_system_os_name
+from .get_system_version import connect, get_system_os_info, get_system_os_name
 
 load_dotenv()
 

@@ -1,12 +1,12 @@
 from typing import Iterable
 
-from remoting import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_hardware(host, user_name, password, debug=False):
     import logging
-    from remoting.win_remote import connect
-    from remoting.get_hardware_info import get_platform_name, get_cpu, get_mem, get_physical_disk_space
+    from .win_remote import connect
+    from .get_hardware_info import get_platform_name, get_cpu, get_mem, get_physical_disk_space
     from info.models.configurations import Configuration, DiskConfiguration, HDDType
     from logview.models import ServerModificationLog
 

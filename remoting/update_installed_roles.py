@@ -1,10 +1,10 @@
-from remoting import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_future_info(host, user_name, password, futures_manager, debug=False):
     import logging
-    from remoting.get_system_version import connect
-    from remoting.get_software import get_server_installed_futures
+    from .get_system_version import connect
+    from .get_software import get_server_installed_futures
     from logview.models import ServerModificationLog
 
     if host:

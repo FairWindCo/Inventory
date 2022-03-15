@@ -4,7 +4,7 @@ from remoting.get_system_version import get_update_dates
 
 def update_general_host_info(host, user_name, password, os_manager, debug=False):
     import logging
-    from remoting.get_system_version import connect, get_system_os_info_full, get_last_update, get_installed_date, \
+    from .get_system_version import connect, get_system_os_info_full, get_last_update, get_installed_date, \
         get_system_os_name
     if host:
         if debug:

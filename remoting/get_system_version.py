@@ -1,7 +1,7 @@
 import re
 
-from remoting.data_type_convertion import UTC_TZ, convert_date, LINE_TO_DOTS, convert_date_json
-from remoting.win_remote import *
+from .data_type_convertion import UTC_TZ, convert_date, LINE_TO_DOTS, convert_date_json
+from .win_remote import *
 
 KB_EXTRACT = re.compile(r'(KB[0-9]{7,10})')
 

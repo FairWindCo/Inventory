@@ -1,9 +1,9 @@
-from remoting.executor import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_remote_access(host, user_name, password, debug=False):
     import logging
-    from remoting.get_system_version import connect, get_system_os_name
+    from .get_system_version import connect, get_system_os_name
     if host:
         if debug:
             print(host.canonical_name)
