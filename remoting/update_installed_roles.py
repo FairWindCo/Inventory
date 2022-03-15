@@ -1,4 +1,4 @@
-from .executor import run_commandline_args
+from executor import run_commandline_args
 
 
 def update_future_info(host, user_name, password, futures_manager, debug=False):

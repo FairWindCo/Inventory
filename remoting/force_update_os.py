@@ -1,4 +1,4 @@
-from .django_execute import execute_in_django
+from django_execute import execute_in_django
 
 
 def update_general_host_info(host, user_name, password):

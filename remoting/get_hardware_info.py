@@ -1,4 +1,4 @@
-from .win_remote import powershell_json, powershell
+from win_remote import powershell_json, powershell
 
 
 def get_logical_disk_space(session):

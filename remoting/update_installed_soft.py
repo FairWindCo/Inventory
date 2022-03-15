@@ -1,10 +1,10 @@
-from .executor import run_commandline_args
+from executor import run_commandline_args
 
 
 def update_software_info(host, user_name, password, soft_manager, debug=False):
     import logging
-    from .get_system_version import connect
-    from .get_software import get_installed_software
+    from get_system_version import connect
+    from get_software import get_installed_software
     from info.models import HostInstalledSoftware
     from logview.models import ServerModificationLog
     from django.utils.timezone import now

@@ -1,7 +1,7 @@
 import argparse
 import concurrent.futures
 
-from .django_execute import execute_in_django
+from django_execute import execute_in_django
 
 
 def run_on_servers_one(username, password, server_list, command, *args, debug=False):
