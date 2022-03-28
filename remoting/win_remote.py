@@ -6,7 +6,7 @@ from winrm.exceptions import WinRMError, WinRMTransportError, WinRMOperationTime
 import logging
 import winrm
 
-from data_type_convertion import convert_to_lines
+from .data_type_convertion import convert_to_lines
 
 
 class MySession(winrm.Session):

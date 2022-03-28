@@ -1,4 +1,4 @@
-from executor import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_update_date(host, user_name, password, debug=False):

@@ -1,4 +1,4 @@
-from executor import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_software_info(host, user_name, password, soft_manager, debug=False):

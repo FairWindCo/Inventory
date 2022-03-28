@@ -1,4 +1,4 @@
-from executor import run_commandline_args
+from .executor import run_commandline_args
 
 
 def update_remote_access(host, user_name, password, debug=False):
