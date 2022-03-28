@@ -14,7 +14,7 @@ class Configuration(models.Model):
     description = models.TextField(verbose_name='Описание')
 
     def __str__(self):
-        return f'{self.platform_name}'
+        return f'{self.server.name} {self.platform_name}'
 
     class Meta:
         verbose_name = 'Конфигурация'
@@ -47,7 +47,7 @@ class DiskConfiguration(models.Model):
     raid_type = models.PositiveIntegerField(choices=HDDType.choices, default=RAIDType.NO_RAID, verbose_name='Тип RAID')
 
     def __str__(self):
-        return f'{self.pool_name} {self.hdd_size}GB'
+        return f'{self.pool_name if self.pool_name else ""} {self.hdd_size}GB'
 
     class Meta:
         verbose_name = 'Диск'

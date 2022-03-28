@@ -36,7 +36,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
                     hdd_type = ''
                 else:
                     hdd_type = f'{hdd_type}'
-                infos.append(f'{disk.pool_name} {hdd_type} - {disk.hdd_size}Gb')
+                infos.append(f'{disk.pool_name if disk.pool_name else ""} {hdd_type} - {disk.hdd_size}Gb')
         return mark_safe('<BR>'.join(infos))
 
     @display(description='Приложения')
