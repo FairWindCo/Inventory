@@ -1,0 +1,191 @@
+import base64
+import datetime
+import json
+import math
+import os.path
+from urllib.parse import unquote
+
+from django.contrib.auth.models import User
+from django.db.models import Q
+from django.http import JsonResponse, HttpResponseForbidden
+# Create your views here.
+from django.middleware import csrf
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from rsa import PrivateKey, decrypt
+
+from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog
+from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
+
+
+def load_key(key_path='private.pem'):
+    if key_path is None:
+        key_path = 'private.pem'
+    if isinstance(key_path, str):
+        if os.path.exists(key_path) and os.path.isfile(key_path):
+            with open(key_path, 'rb') as f:
+                key = f.read()
+            return PrivateKey.load_pkcs1(key)
+    elif isinstance(key_path, (bytes, bytearray)):
+        return PrivateKey.load_pkcs1(key_path)
+
+
+def test_request_body(body_text, key=None, key_field_name='key',
+                      control_value_field='host',
+                      time_format='%d%m%y%H%M%S',
+                      timedelta=600):
+    if body_text:
+        key = load_key(key)
+        if key:
+            data = json.loads(unquote(body_text))
+            enc_key = data.get(key_field_name, None)
+            control_field = data.get(control_value_field, None)
+            if enc_key:
+                decoded_key = base64.b64decode(enc_key)
+                decoded_key_value_byte = decrypt(decoded_key, key)
+                decoded_key_value = decoded_key_value_byte.decode()
+                if decoded_key_value.startswith(control_field):
+                    print(decoded_key_value, )
+                    time_str = decoded_key_value[len(control_field):]
+                    print(decoded_key_value, time_str)
+                    time_value = datetime.datetime.strptime(time_str, time_format)
+
+                    if (datetime.datetime.now() - time_value).seconds < timedelta:
+                        return data
+
+
+# @csrf_exempt
+def post_request(request):
+    if request.method == 'POST':
+        body_text = request.body
+        if test_request_body(body_text):
+            return JsonResponse({'result': 'ok'})
+        else:
+            return HttpResponseForbidden()
+
+
+def get_token(request):
+    return JsonResponse({
+        'csrf': csrf.get_token(request)})
+
+
+NOW = datetime.datetime.now()
+LOCAL_NOW = NOW.astimezone()
+LOCAL_TZ = LOCAL_NOW.tzinfo
+UTC_TZ = datetime.timezone.utc
+
+
+def process_time(installed):
+    for format_time in [
+        '%Y%m%d',
+        '%Y/%m/%d',
+        '%Y.%m.%d',
+        '%d%m%Y',
+        '%d/%m/%Y',
+        '%d.%m.%Y',
+    ]:
+        try:
+            return make_aware(timezone.datetime.strptime(installed, format_time))
+            # return datetime.datetime.strptime(installed, format_time).astimezone(LOCAL_TZ)
+        except Exception:
+            pass
+
+
+def process_soft(server, soft_info):
+    check_date = timezone.localtime(timezone=LOCAL_TZ)
+    for soft in soft_info:
+        print(soft)
+        if soft['name'] is None:
+            continue
+        try:
+            soft_i = SoftwareCatalog.objects.get(name=soft['name'])
+        except SoftwareCatalog.DoesNotExist:
+            soft_i = SoftwareCatalog(name=soft['name'])
+            soft_i.save()
+
+        try:
+            host_info = HostInstalledSoftware.objects.get(soft=soft_i,
+                                                          server=server)
+            host_info.last_check_date = datetime.datetime.now()
+            host_info.version = soft['version']
+            host_info.installation_date = process_time(soft['installed'])
+        except HostInstalledSoftware.DoesNotExist:
+            host_info = HostInstalledSoftware(soft=soft_i,
+                                              server=server,
+                                              version=soft['version'],
+                                              installation_date=process_time(soft['installed']),
+                                              last_check_date=check_date
+                                              )
+        host_info.save()
+    HostInstalledSoftware.objects.filter(server=server).filter(
+        Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+
+
+def process_domain(server, domain_info):
+    try:
+        domain = Domain.objects.get(name=domain_info)
+    except Domain.DoesNotExist:
+        domain = Domain(name=domain_info)
+        domain.save()
+    server.domain = domain
+
+
+def process_ip(server, ip_info):
+    for ip in ip_info:
+        try:
+            adr = IP.objects.get(ip_address=ip)
+        except IP.DoesNotExist:
+            adr = IP(ip_address=ip)
+            adr.save()
+        for serv_ip in server.ip_addresses.all():
+            if serv_ip == adr:
+                continue
+        server.ip_addresses.add(adr)
+
+
+def process_host_json(request):
+    if request.method == 'POST':
+        body_text = request.body
+        json_data = test_request_body(body_text)
+        if json_data:
+            host = json_data['host']
+
+            try:
+                server = Server.objects.get(name=host)
+            except Server.DoesNotExist:
+                server = Server(name=host)
+                server.room = ServerRoom.objects.first()
+                server.updated_by = User.objects.first()
+            process_domain(server, json_data['Domain'])
+            server.save()
+            process_ip(server, json_data['ip'])
+            process_soft(server, json_data['soft'])
+
+            if json_data['Manufacturer']:
+                if server.hardware.first():
+                    cpu = server.hardware.first()
+                else:
+                    cpu = Configuration(server=server)
+
+                cpu.platform_name = json_data.get('Manufacturer', None)
+                cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
+                if json_data['cpu_count'] >= 1:
+                    cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
+                    cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
+                    cpu.cpu_type = json_data['cpu_info'][0].get('Name', 1)
+                cpu.description = json_data.get('SystemFamily', None)
+                cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
+                for disk in cpu.disks.all():
+                    disk.delete()
+                for disk_info in json_data['hdd_info']:
+                    d = DiskConfiguration(configuration=cpu)
+                    d.pool_name = disk_info['model']
+                    d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
+                    d.save()
+                cpu.save()
+
+            server.save()
+
+            return JsonResponse({'result': 'ok'})
+        else:
+            return HttpResponseForbidden()

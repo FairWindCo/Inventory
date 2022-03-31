@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'info',
     'logview',
     'reports',
+    'task_logger'
 ]
 
 MIDDLEWARE = [
