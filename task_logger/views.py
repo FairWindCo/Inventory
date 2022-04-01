@@ -173,11 +173,15 @@ def process_host_json(request):
                     server.room = ServerRoom.objects.first()
                     server.updated_by = User.objects.first()
                 if server.os_version is None:
-                    server.os_version = json_data.get('Version', None)
+                    version_os = json_data.get('Version', None)
+                    build = json_data.get('BuildNumber', None)
+                    if version_os:
+                        version_os = version_os+'.'+build if build else version_os
+                    server.os_version = version_os
                 install_time = json_data.get('InstallDate', None)
                 if server.os_installed is None and install_time:
                     server.os_installed = process_time(install_time[:-4])
-                print(json_data['sysname'])
+                #print(json_data['sysname'])
                 process_domain(server, json_data['Domain'])
                 server.save()
                 process_ip(server, json_data['ip'])
