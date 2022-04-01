@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from rsa import PrivateKey, decrypt
 
-from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog
+from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 
 
@@ -143,6 +143,17 @@ def process_ip(server, ip_info):
         server.ip_addresses.add(adr)
 
 
+def process_futures(server, futures):
+    server.futures.clear()
+    for future in futures:
+        try:
+            fut = ServerFuture.objects.get(name=future)
+        except ServerFuture.DoesNotExist:
+            fut = ServerFuture(name=future)
+            fut.save()
+        server.futures.add(fut)
+
+
 def process_host_json(request):
     if request.method == 'POST':
         body_text = request.body
@@ -160,6 +171,7 @@ def process_host_json(request):
             server.save()
             process_ip(server, json_data['ip'])
             process_soft(server, json_data['soft'])
+            process_futures(server, json_data.get('futures', []))
 
             if json_data['Manufacturer']:
                 if server.hardware.first():
