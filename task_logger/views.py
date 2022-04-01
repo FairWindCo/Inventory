@@ -191,6 +191,7 @@ def process_host_json(request):
                     cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
                     for disk in cpu.disks.all():
                         disk.delete()
+                    cpu.save()
                     for disk_info in json_data['hdd_info']:
                         d = DiskConfiguration(configuration=cpu)
                         d.pool_name = disk_info['model']
