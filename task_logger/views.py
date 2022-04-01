@@ -159,7 +159,7 @@ def process_host_json(request):
     if request.method == 'POST':
         try:
             body_text = request.body
-            json_data = test_request_body(body_text)
+            json_data = test_request_body(body_text.decode())
             if json_data:
                 host = json_data['host']
 
