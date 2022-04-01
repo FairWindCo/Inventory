@@ -156,48 +156,50 @@ def process_futures(server, futures):
 
 def process_host_json(request):
     if request.method == 'POST':
-        body_text = request.body
-        json_data = test_request_body(body_text)
-        if json_data:
-            host = json_data['host']
+        try:
+            body_text = request.body
+            json_data = test_request_body(body_text)
+            if json_data:
+                host = json_data['host']
 
-            try:
-                server = Server.objects.get(name=host)
-            except Server.DoesNotExist:
-                server = Server(name=host)
-                server.room = ServerRoom.objects.first()
-                server.updated_by = User.objects.first()
-            process_domain(server, json_data['Domain'])
-            server.save()
-            process_ip(server, json_data['ip'])
-            process_soft(server, json_data['soft'])
-            process_futures(server, json_data.get('futures', []))
+                try:
+                    server = Server.objects.get(name=host)
+                except Server.DoesNotExist:
+                    server = Server(name=host)
+                    server.room = ServerRoom.objects.first()
+                    server.updated_by = User.objects.first()
+                process_domain(server, json_data['Domain'])
+                server.save()
+                process_ip(server, json_data['ip'])
+                process_soft(server, json_data['soft'])
+                process_futures(server, json_data.get('futures', []))
 
-            if json_data['Manufacturer']:
-                if server.hardware.first():
-                    cpu = server.hardware.first()
-                else:
-                    cpu = Configuration(server=server)
+                if json_data['Manufacturer']:
+                    if server.hardware.first():
+                        cpu = server.hardware.first()
+                    else:
+                        cpu = Configuration(server=server)
 
-                cpu.platform_name = json_data.get('Manufacturer', None)
-                cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
-                if json_data['cpu_count'] >= 1:
-                    cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
-                    cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
-                    cpu.cpu_type = json_data['cpu_info'][0].get('Name', 1)
-                cpu.description = json_data.get('SystemFamily', None)
-                cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
-                for disk in cpu.disks.all():
-                    disk.delete()
-                for disk_info in json_data['hdd_info']:
-                    d = DiskConfiguration(configuration=cpu)
-                    d.pool_name = disk_info['model']
-                    d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
-                    d.save()
-                cpu.save()
+                    cpu.platform_name = json_data.get('Manufacturer', None)
+                    cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
+                    if json_data['cpu_count'] >= 1:
+                        cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
+                        cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
+                        cpu.cpu_type = json_data['cpu_info'][0].get('Name', 1)
+                    cpu.description = json_data.get('SystemFamily', None)
+                    cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
+                    for disk in cpu.disks.all():
+                        disk.delete()
+                    for disk_info in json_data['hdd_info']:
+                        d = DiskConfiguration(configuration=cpu)
+                        d.pool_name = disk_info['model']
+                        d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
+                        d.save()
+                    cpu.save()
 
-            server.save()
+                server.save()
 
-            return JsonResponse({'result': 'ok'})
-        else:
-            return HttpResponseForbidden()
+                return JsonResponse({'result': 'ok'})
+        except Exception as e:
+            return JsonResponse({'result': 'error', 'message': str(e)})
+    return HttpResponseForbidden()
