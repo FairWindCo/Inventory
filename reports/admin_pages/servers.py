@@ -26,7 +26,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     def show_configuration(self, obj):
         infos = []
         for hardware in obj.hardware.all():
-            infos.append(f'{hardware.platform_name} <B>CPU:</B>{hardware.num_cpu} '
+            infos.append(f'{hardware.platform_name}<BR> {hardware.cpu_type} <B>CPU:</B>{hardware.num_cpu} '
                          f'<B>CORE:</B>{hardware.num_cores} <B>HT:</B>{hardware.num_virtual} <B>RAM:</B> '
                          f'{hardware.ram}GB'
                          )

@@ -84,6 +84,7 @@ def process_time(installed):
         '%d%m%Y',
         '%d/%m/%Y',
         '%d.%m.%Y',
+        '%Y%m%d%H%M%S.%f'
     ]:
         try:
             return make_aware(timezone.datetime.strptime(installed, format_time))
@@ -132,6 +133,8 @@ def process_domain(server, domain_info):
 
 
 def process_ip(server, ip_info):
+    for ip in server.ip_addresses.all():
+        ip.delete()
     for ip in ip_info:
         try:
             adr = IP.objects.get(ip_address=ip)
@@ -169,6 +172,12 @@ def process_host_json(request):
                     server = Server(name=host)
                     server.room = ServerRoom.objects.first()
                     server.updated_by = User.objects.first()
+                if server.os_version is None:
+                    server.os_version = json_data.get('Version', None)
+                install_time = json_data.get('InstallDate', None)
+                if server.os_installed is None and install_time:
+                    server.os_installed = process_time(install_time[:-4])
+                print(json_data['sysname'])
                 process_domain(server, json_data['Domain'])
                 server.save()
                 process_ip(server, json_data['ip'])
@@ -181,12 +190,14 @@ def process_host_json(request):
                     else:
                         cpu = Configuration(server=server)
 
-                    cpu.platform_name = json_data.get('Manufacturer', None)
+                    cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
+                                                  json_data.get('Model', ''),
+                                                  ])
                     cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
                     if json_data['cpu_count'] >= 1:
                         cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
                         cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
-                        cpu.cpu_type = json_data['cpu_info'][0].get('Name', 1)
+                        cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
                     cpu.description = json_data.get('SystemFamily', None)
                     cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
                     for disk in cpu.disks.all():
