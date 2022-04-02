@@ -17,6 +17,7 @@ from rsa import PrivateKey, decrypt
 
 from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
+from task_logger.models import ServerTaskReport
 
 
 def load_key(key_path='private.pem'):
@@ -59,10 +60,34 @@ def test_request_body(body_text, key=None, key_field_name='key',
 def post_request(request):
     if request.method == 'POST':
         body_text = request.body
-        if test_request_body(body_text):
-            return JsonResponse({'result': 'ok'})
-        else:
-            return HttpResponseForbidden()
+        try:
+            json_data = test_request_body(body_text.decode())
+            if json_data:
+                server_name = json_data.get('host', None)
+                if server_name:
+                    try:
+                        server = Server.objects.get(name=server_name)
+                        ndt = datetime.datetime.strptime(json_data['time'],
+                                                         '%a %b %d %H:%M:%S %Y')
+                        dt = timezone.make_aware(ndt, timezone.get_current_timezone())
+                        report = ServerTaskReport(server=server,
+                                                  info=json_data.get('message', None),
+                                                  report_date=dt,
+                                                  is_error=json_data.get('is_error', False))
+                        report.save()
+
+                        return JsonResponse({'result': 'ok'})
+                    except Server.DoesNotExist:
+                        return JsonResponse({'result': 'error', 'message': 'Unknown server:' + server_name})
+                else:
+                    return JsonResponse({'result': 'error', 'message': 'No host name is request'})
+            else:
+                return HttpResponseForbidden()
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
 
 
 def get_token(request):
@@ -87,14 +112,14 @@ def process_time(installed):
         '%Y%m%d%H%M%S.%f'
     ]:
         try:
-            return make_aware(timezone.datetime.strptime(installed, format_time))
+            return make_aware(timezone.datetime.strptime(installed, format_time), timezone.get_current_timezone())
             # return datetime.datetime.strptime(installed, format_time).astimezone(LOCAL_TZ)
         except Exception:
             pass
 
 
 def process_soft(server, soft_info):
-    check_date = timezone.localtime(timezone=LOCAL_TZ)
+    check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     for soft in soft_info:
         print(soft)
         if soft['name'] is None:
@@ -108,7 +133,7 @@ def process_soft(server, soft_info):
         try:
             host_info = HostInstalledSoftware.objects.get(soft=soft_i,
                                                           server=server)
-            host_info.last_check_date = datetime.datetime.now()
+            host_info.last_check_date = check_date
             host_info.version = soft['version']
             host_info.installation_date = process_time(soft['installed'])
         except HostInstalledSoftware.DoesNotExist:
@@ -176,12 +201,12 @@ def process_host_json(request):
                     version_os = json_data.get('Version', None)
                     build = json_data.get('BuildNumber', None)
                     if version_os:
-                        version_os = version_os+'.'+build if build else version_os
+                        version_os = version_os + '.' + build if build else version_os
                     server.os_version = version_os
                 install_time = json_data.get('InstallDate', None)
                 if server.os_installed is None and install_time:
                     server.os_installed = process_time(install_time[:-4])
-                #print(json_data['sysname'])
+                # print(json_data['sysname'])
                 process_domain(server, json_data['Domain'])
                 server.save()
                 process_ip(server, json_data['ip'])
