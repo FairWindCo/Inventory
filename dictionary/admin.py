@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import *
 
 
@@ -26,3 +27,4 @@ admin.site.register(ServerRoom, SimpleNameAdmin)
 admin.site.register(ServerRole, SimpleNameAdmin)
 admin.site.register(ServerFuture, SimpleNameAdmin)
 admin.site.register(ServerResponse, SimpleNameAdmin)
+admin.site.register(ServerService, SimpleNameAdmin)

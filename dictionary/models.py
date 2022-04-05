@@ -97,3 +97,16 @@ class ServerFuture(models.Model):
         verbose_name = 'Роль/Оснастка'
         verbose_name_plural = 'Роли/Оснастки'
         ordering = ('name',)
+
+
+class ServerService(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Служба\Демон', unique=True)
+    display_name = models.CharField(max_length=200, verbose_name='Описание')
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Служба\Демон'
+        verbose_name_plural = 'Служба\Демон'
+        ordering = ('name',)

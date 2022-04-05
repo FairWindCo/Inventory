@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from rsa import PrivateKey, decrypt
 
-from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture
+from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 from task_logger.models import ServerTaskReport
 
@@ -73,7 +73,7 @@ def post_request(request):
                         report = ServerTaskReport(server=server,
                                                   info=json_data.get('message', None),
                                                   report_date=dt,
-                                                  is_error=json_data.get('is_error', False))
+                                                  is_error=not json_data.get('is_error', False))
                         report.save()
 
                         return JsonResponse({'result': 'ok'})
@@ -183,6 +183,17 @@ def process_futures(server, futures):
         server.futures.add(fut)
 
 
+def process_daemons(server, daemons):
+    server.daemons.clear()
+    for daemon in daemons:
+        try:
+            fut = ServerService.objects.get(name=daemon)
+        except ServerService.DoesNotExist:
+            fut = ServerService(name=daemon)
+            fut.save()
+        server.daemons.add(fut)
+
+
 def process_host_json(request):
     if request.method == 'POST':
         try:
@@ -212,6 +223,7 @@ def process_host_json(request):
                 process_ip(server, json_data['ip'])
                 process_soft(server, json_data['soft'])
                 process_futures(server, json_data.get('futures', []))
+                process_daemons(server, json_data.get('services', []))
 
                 if json_data['Manufacturer']:
                     if server.hardware.first():

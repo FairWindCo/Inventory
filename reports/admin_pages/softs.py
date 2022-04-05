@@ -20,7 +20,7 @@ class SoftInfoAdmin(admin.ModelAdmin):
     readonly_fields = ('display_servers',)
     list_filter = ('installs__server__name',)
 
-    @display(description='URL')
+    @display(description='Серверы')
     def display_servers(self, obj):
         infos = [f'<B>{insttals.server.name}:</b> {insttals.soft.name} - {insttals.version}'
                  for insttals in obj.installs.all()]

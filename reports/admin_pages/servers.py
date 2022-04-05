@@ -16,8 +16,8 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     list_display = ('room', 'domain', 'ip_address_set',
                     'name', 'virtual_server_name', 'os_name', 'os_version', 'is_online', 'os_last_update')
-    readonly_fields = ('show_configuration', 'show_application', 'show_soft', 'show_roles')
-    exclude = ('futures',)
+    readonly_fields = ('show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_daemons')
+    exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name', 'applications__name')
@@ -60,8 +60,15 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='Роли')
     def show_roles(self, obj):
-        infos = [f'{app.name} - {app.display_name}'
+        infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
                  for app in obj.futures.all()]
+        # print(infos)
+        return mark_safe('<BR>'.join(infos))
+
+    @display(description='Службы')
+    def show_daemons(self, obj):
+        infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
+                 for app in obj.daemons.all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 

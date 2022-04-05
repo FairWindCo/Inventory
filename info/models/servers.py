@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture
+from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture, ServerService
 from .applications import HostInstalledSoftware
 
 
@@ -13,6 +13,7 @@ class Server(models.Model):
     virtual_server_name = models.CharField(max_length=50, verbose_name='имя виртуальной машины', blank=True, null=True)
     os_version = models.CharField(max_length=50, verbose_name='Версия ОС', blank=True, null=True)
     futures = models.ManyToManyField(ServerFuture, related_name='servers', blank=True)
+    daemons = models.ManyToManyField(ServerService, related_name='servers', blank=True)
     installed_soft = models.ManyToManyField(SoftwareCatalog, related_name='servers',
                                             through=HostInstalledSoftware, blank=True)
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
