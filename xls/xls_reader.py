@@ -165,6 +165,10 @@ class OSManager(BaseManager):
         (re.compile(r'.*[Ss]erver[\s]*2019.*'), 'Windows Server Standard 2019'),
         (re.compile(r'.*[Ss]erver[\s]*2022[\s]*[Dd]ata[Cc]enter.*'), 'Windows Server DataCenter 2022'),
         (re.compile(r'.*[Ss]erver[\s]*2022.*'), 'Windows Server Standard 2022'),
+        (re.compile(r'.*[Ww]indows[\s]*10.*[Ee]nt.*'), 'Windows 10 Enterprise'),
+        (re.compile(r'.*[Ww]indows[\s]*10.*[Pp]ro.*'), 'Windows 10 Pro'),
+        (re.compile(r'.*[Ww]indows[\s]*11.*[Ee]nt.*'), 'Windows 11 Enterprise'),
+        (re.compile(r'.*[Ww]indows[\s]*11.*[Pp]ro.*'), 'Windows 11 Pro'),
         (re.compile(r'.*2008.*'), 'Windows Server Enterprise 2008 R2 SP1'),
         (re.compile(r'.*2003.*'), 'Windows Server 2003'),
     )

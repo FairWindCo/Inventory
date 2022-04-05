@@ -18,6 +18,7 @@ from rsa import PrivateKey, decrypt
 from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 from task_logger.models import ServerTaskReport
+from xls.xls_reader import OSManager
 
 
 def load_key(key_path='private.pem'):
@@ -218,6 +219,11 @@ def process_host_json(request):
                 if server.os_installed is None and install_time:
                     server.os_installed = process_time(install_time[:-4])
                 # print(json_data['sysname'])
+                sys_name = json_data.get('sysname', None)
+                if sys_name:
+                    osm = OSManager()
+                    sys_name = osm.get_value(sys_name)
+                    server.os_name = sys_name
                 process_domain(server, json_data['Domain'])
                 server.save()
                 process_ip(server, json_data['ip'])
