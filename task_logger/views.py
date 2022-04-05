@@ -119,6 +119,16 @@ def process_time(installed):
             pass
 
 
+def process_hotfix(server, hotfix_list):
+    sorted_hos_fix = sorted(
+        [(hotfix_id, process_time(date_install)) for hotfix_id, date_install in hotfix_list],
+        key=lambda a: a[1].timestamp() if a[1] else 0
+    )
+    hotfix_id, installed = sorted_hos_fix[-1]
+    server.last_update_id = hotfix_id
+    server.os_last_update = installed
+
+
 def process_soft(server, soft_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     for soft in soft_info:
@@ -230,7 +240,7 @@ def process_host_json(request):
                 process_soft(server, json_data['soft'])
                 process_futures(server, json_data.get('futures', []))
                 process_daemons(server, json_data.get('services', []))
-
+                process_hotfix(server, json_data.get('hotfix', []))
                 if json_data['Manufacturer']:
                     if server.hardware.first():
                         cpu = server.hardware.first()
