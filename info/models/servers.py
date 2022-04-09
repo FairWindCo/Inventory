@@ -50,6 +50,7 @@ class Server(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.version += 1
+        self.name = self.name.upper()
         super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):

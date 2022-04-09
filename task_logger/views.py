@@ -132,7 +132,7 @@ def process_hotfix(server, hotfix_list):
 def process_soft(server, soft_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     for soft in soft_info:
-        print(soft)
+        #print(soft)
         if soft['name'] is None:
             continue
         try:
@@ -171,16 +171,15 @@ def process_domain(server, domain_info):
 def process_ip(server, ip_info):
     for ip in server.ip_addresses.all():
         ip.delete()
+    server.save()
     for ip in ip_info:
         try:
             adr = IP.objects.get(ip_address=ip)
         except IP.DoesNotExist:
             adr = IP(ip_address=ip)
             adr.save()
-        for serv_ip in server.ip_addresses.all():
-            if serv_ip == adr:
-                continue
         server.ip_addresses.add(adr)
+        server.save()
 
 
 def process_futures(server, futures):
@@ -211,8 +210,7 @@ def process_host_json(request):
             body_text = request.body
             json_data = test_request_body(body_text.decode())
             if json_data:
-                host = json_data['host']
-
+                host = json_data['host'].upper()
                 try:
                     server = Server.objects.get(name=host)
                 except Server.DoesNotExist:
