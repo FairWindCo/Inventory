@@ -46,6 +46,8 @@ class IP(models.Model):
     mask = models.PositiveIntegerField(verbose_name='Маска', default=32)
 
     def __str__(self):
+        if self.mask < 32:
+            return f'{self.ip_address}/{self.mask}'
         return f'{self.ip_address}'
 
     class Meta:

@@ -19,11 +19,17 @@ class SoftwareCatalogAdmin(admin.ModelAdmin):
     sortable_by = ('name',)
 
 
+class RoomAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+    sortable_by = ('name',)
+    autocomplete_fields = ('net_masks',)
+
+
 admin.site.register(SoftwareCatalog, SoftwareCatalogAdmin)
 admin.site.register(IP, IPAdmin)
 admin.site.register(OS, SimpleNameAdmin)
 admin.site.register(Domain, SimpleNameAdmin)
-admin.site.register(ServerRoom, SimpleNameAdmin)
+admin.site.register(ServerRoom, RoomAdmin)
 admin.site.register(ServerRole, SimpleNameAdmin)
 admin.site.register(ServerFuture, SimpleNameAdmin)
 admin.site.register(ServerResponse, SimpleNameAdmin)
