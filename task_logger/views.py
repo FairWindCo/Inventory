@@ -184,7 +184,12 @@ def process_ip(server, ip_info, process_net=None):
             for network in process_net:
                 net_address = ipaddress.ip_network(f'{str(network.ip_address)}/{network.mask}')
                 if cur_ip in net_address:
-                    server.room = network.room.first()
+                    try:
+                        rooms = network.room.first()
+                        if rooms:
+                            server.room = rooms
+                    except Exception:
+                        pass
 
         server.ip_addresses.add(adr)
         server.save()
