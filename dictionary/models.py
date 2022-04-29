@@ -15,7 +15,10 @@ class Domain(models.Model):
 
 
 class ServerRoom(models.Model):
-    name = models.CharField(max_length=100, verbose_name='имя домена', unique=True)
+    name = models.CharField(max_length=100, verbose_name='имя серверной', unique=True)
+    net_masks = models.ManyToManyField("IP", related_name='room',
+                                       verbose_name='сетевые маски',
+                                       blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -40,6 +43,7 @@ class OS(models.Model):
 
 class IP(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name='IP адресс', unique=True)
+    mask = models.PositiveIntegerField(verbose_name='Маска', default=32)
 
     def __str__(self):
         return f'{self.ip_address}'
@@ -47,6 +51,7 @@ class IP(models.Model):
     class Meta:
         verbose_name = 'IP'
         verbose_name_plural = 'IP'
+        unique_together = ('ip_address', 'mask')
 
 
 class ServerRole(models.Model):

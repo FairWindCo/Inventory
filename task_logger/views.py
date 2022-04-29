@@ -1,5 +1,6 @@
 import base64
 import datetime
+import ipaddress
 import json
 import math
 import os.path
@@ -132,7 +133,7 @@ def process_hotfix(server, hotfix_list):
 def process_soft(server, soft_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     for soft in soft_info:
-        #print(soft)
+        # print(soft)
         if soft['name'] is None:
             continue
         try:
@@ -168,7 +169,7 @@ def process_domain(server, domain_info):
     server.domain = domain
 
 
-def process_ip(server, ip_info):
+def process_ip(server, ip_info, process_net=None):
     for ip in server.ip_addresses.all():
         ip.delete()
     server.save()
@@ -178,6 +179,13 @@ def process_ip(server, ip_info):
         except IP.DoesNotExist:
             adr = IP(ip_address=ip)
             adr.save()
+        if process_net:
+            cur_ip = ipaddress.ip_address(adr.ip_address)
+            for network in process_net:
+                net_address = ipaddress.ip_network(f'{str(network.ip_address)}/{network.mask}')
+                if cur_ip in net_address:
+                    server.room = network.room.first()
+
         server.ip_addresses.add(adr)
         server.save()
 
@@ -213,9 +221,11 @@ def process_host_json(request):
                 host = json_data['host'].upper()
                 try:
                     server = Server.objects.get(name=host)
+                    networks = None
                 except Server.DoesNotExist:
                     server = Server(name=host)
                     server.room = ServerRoom.objects.first()
+                    networks = IP.objects.filter(mask__lt=32).all()
                     server.updated_by = User.objects.first()
                 if server.os_version is None:
                     version_os = json_data.get('Version', None)
@@ -234,7 +244,7 @@ def process_host_json(request):
                     server.os_name = sys_name
                 process_domain(server, json_data['Domain'])
                 server.save()
-                process_ip(server, json_data['ip'])
+                process_ip(server, json_data['ip'], networks)
                 process_soft(server, json_data['soft'])
                 process_futures(server, json_data.get('futures', []))
                 process_daemons(server, json_data.get('services', []))
