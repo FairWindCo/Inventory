@@ -14,8 +14,10 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.middleware import csrf
 from django.utils import timezone
 from django.utils.timezone import make_aware
+from django.views.decorators.csrf import csrf_exempt
 from rsa import PrivateKey, decrypt
 
+from Inventarisation import settings
 from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 from task_logger.models import ServerTaskReport
@@ -93,8 +95,10 @@ def post_request(request):
 
 
 def get_token(request):
+    from django.conf import settings
     return JsonResponse({
-        'csrf': csrf.get_token(request)})
+        'csrf': csrf.get_token(request),
+        'header_name': settings.CSRF_HEADER_NAME})
 
 
 NOW = datetime.datetime.now()
@@ -217,6 +221,7 @@ def process_daemons(server, daemons):
         server.daemons.add(fut)
 
 
+@csrf_exempt
 def process_host_json(request):
     if request.method == 'POST':
         try:
@@ -250,7 +255,7 @@ def process_host_json(request):
                 process_domain(server, json_data['Domain'])
                 server.save()
                 process_ip(server, json_data['ip'], networks)
-                process_soft(server, json_data['soft'])
+                process_soft(server, json_data.get('soft', []))
                 process_futures(server, json_data.get('futures', []))
                 process_daemons(server, json_data.get('services', []))
                 process_hotfix(server, json_data.get('hotfix', []))
