@@ -60,7 +60,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
                         return data
 
 
-# @csrf_exempt
+@csrf_exempt
 def post_request(request):
     if request.method == 'POST':
         body_text = request.body
