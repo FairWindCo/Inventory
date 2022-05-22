@@ -46,7 +46,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
             data = json.loads(unquote(body_text))
             enc_key = data.get(key_field_name, None)
             control_field = data.get(control_value_field, None)
-            if enc_key:
+            if enc_key and control_field:
                 decoded_key = base64.b64decode(enc_key)
                 decoded_key_value_byte = decrypt(decoded_key, key)
                 decoded_key_value = decoded_key_value_byte.decode()
