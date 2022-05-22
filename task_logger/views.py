@@ -62,14 +62,10 @@ def test_request_body(body_text, key=None, key_field_name='key',
 
 @csrf_exempt
 def process_message(request):
-    print("NEW REQUEST", request)
     if request.method == 'POST':
         try:
-            print("NEW REQUEST1")
             body_text = request.body
-            print("NEW REQUEST2")
             json_data = test_request_body(body_text.decode())
-            print("NEW REQUEST3")
             if json_data:
                 server_name = json_data.get('host', None)
                 if server_name:
@@ -92,16 +88,11 @@ def process_message(request):
                     return JsonResponse({'result': 'error', 'message': 'No host name is request'})
             else:
                 return HttpResponseForbidden('Incorrect requests')
-        except Exception as e:
-            print(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
         except BaseException as e:
             print(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
     else:
         print('NOT POST REQUESTS')
