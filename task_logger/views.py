@@ -74,6 +74,7 @@ def process_message(request):
                 server_name = json_data.get('host', None)
                 if server_name:
                     try:
+                        server_name = server_name.upper()
                         server = Server.objects.get(name=server_name)
                         ndt = datetime.datetime.strptime(json_data['time'],
                                                          '%a %b %d %H:%M:%S %Y')
