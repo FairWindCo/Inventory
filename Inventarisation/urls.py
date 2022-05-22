@@ -16,12 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from task_logger.views import post_request, get_token, process_host_json
+from task_logger.views import process_message, get_token, process_host_info_json
 
 urlpatterns = [
-    path('special', post_request),
+    path('special', process_message),
     path('token', get_token),
-    path('host_info_update', process_host_json),
+    path('host_info_update', process_host_info_json),
     path('', admin.site.urls),
 
 ]

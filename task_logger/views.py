@@ -61,7 +61,8 @@ def test_request_body(body_text, key=None, key_field_name='key',
 
 
 @csrf_exempt
-def post_request(request):
+def process_message(request):
+    print("NEW REQUEST")
     if request.method == 'POST':
         try:
             body_text = request.body
@@ -222,7 +223,7 @@ def process_daemons(server, daemons):
 
 
 @csrf_exempt
-def process_host_json(request):
+def process_host_info_json(request):
     if request.method == 'POST':
         try:
             body_text = request.body
