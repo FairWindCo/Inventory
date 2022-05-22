@@ -65,8 +65,11 @@ def process_message(request):
     print("NEW REQUEST")
     if request.method == 'POST':
         try:
+            print("NEW REQUEST1")
             body_text = request.body
+            print("NEW REQUEST2")
             json_data = test_request_body(body_text.decode())
+            print("NEW REQUEST3")
             if json_data:
                 server_name = json_data.get('host', None)
                 if server_name:
