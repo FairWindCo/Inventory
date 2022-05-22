@@ -90,7 +90,7 @@ def process_message(request):
                 else:
                     return JsonResponse({'result': 'error', 'message': 'No host name is request'})
             else:
-                return HttpResponseForbidden()
+                return HttpResponseForbidden('Incorrect requests')
         except Exception as e:
             print(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -99,6 +99,13 @@ def process_message(request):
             return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
         except BaseException as e:
             print(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
+    else:
+        print('NOT POST REQUESTS')
+        return HttpResponseForbidden('Incorrect requests type')
+
 
 
 def get_token(request):
