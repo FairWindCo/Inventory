@@ -62,7 +62,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
 
 @csrf_exempt
 def process_message(request):
-    print("NEW REQUEST")
+    print("NEW REQUEST", request)
     if request.method == 'POST':
         try:
             print("NEW REQUEST1")
