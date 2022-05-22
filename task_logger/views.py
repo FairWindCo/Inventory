@@ -63,8 +63,8 @@ def test_request_body(body_text, key=None, key_field_name='key',
 @csrf_exempt
 def post_request(request):
     if request.method == 'POST':
-        body_text = request.body
         try:
+            body_text = request.body
             json_data = test_request_body(body_text.decode())
             if json_data:
                 server_name = json_data.get('host', None)
@@ -227,6 +227,7 @@ def process_host_json(request):
         try:
             body_text = request.body
             json_data = test_request_body(body_text.decode())
+
             if json_data:
                 host = json_data['host'].upper()
                 try:
