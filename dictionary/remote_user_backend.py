@@ -1,6 +1,15 @@
 from django.contrib.auth.backends import RemoteUserBackend
+from django.contrib.auth.middleware import RemoteUserMiddleware
 
 
+class CustomRemoteUserMiddleware(RemoteUserMiddleware):
+
+    def process_request(self, request):
+        print(f'{self.header}:{request.META.get(self.header)}')
+        super().process_request(request)
+
+    def clean_username(self, username, request):
+        return super().clean_username(username, request)
 
 
 class CustomUserBackend(RemoteUserBackend):
