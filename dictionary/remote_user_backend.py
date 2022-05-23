@@ -1,6 +1,8 @@
 from django.contrib.auth.backends import RemoteUserBackend
 
 
+
+
 class CustomUserBackend(RemoteUserBackend):
     def authenticate(self, request, remote_user):
         print(f'Auth username {remote_user}')
