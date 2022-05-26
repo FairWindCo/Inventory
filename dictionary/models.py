@@ -25,12 +25,12 @@ class ServerRoom(models.Model):
 
     class Meta:
         ordering = ('name',)
-        verbose_name = 'Серверная'
-        verbose_name_plural = 'Серверных'
+        verbose_name = 'Серверна кімната'
+        verbose_name_plural = 'Серверні кімнати'
 
 
 class OS(models.Model):
-    name = models.CharField(max_length=100, verbose_name='название ОС', unique=True)
+    name = models.CharField(max_length=100, verbose_name='назва ОС', unique=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -42,7 +42,7 @@ class OS(models.Model):
 
 
 class IP(models.Model):
-    ip_address = models.GenericIPAddressField(verbose_name='IP адресс', unique=True)
+    ip_address = models.GenericIPAddressField(verbose_name='IP адрес', unique=True)
     mask = models.PositiveIntegerField(verbose_name='Маска', default=32)
 
     def __str__(self):
@@ -57,63 +57,63 @@ class IP(models.Model):
 
 
 class ServerRole(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Роль сервера', unique=True)
-    description = models.TextField(verbose_name='Описание', blank=True, null=True)
+    name = models.CharField(max_length=200, verbose_name='Призначення сервера', unique=True)
+    description = models.TextField(verbose_name='Опис', blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Роль Приложения'
-        verbose_name_plural = 'Роли Приложения'
+        verbose_name = 'Призначення додатку'
+        verbose_name_plural = 'Призначення додатків'
         ordering = ('name',)
 
 
 class ServerResponse(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Отвественность', unique=True)
+    name = models.CharField(max_length=200, verbose_name='Відповідальність', unique=True)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Отвественность'
-        verbose_name_plural = 'Отвественности'
+        verbose_name = 'Відповідальність'
+        verbose_name_plural = 'Відповідальності'
         ordering = ('name',)
 
 
 class SoftwareCatalog(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название приложения', unique=True)
+    name = models.CharField(max_length=200, verbose_name='Назва програми', unique=True)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Программа'
-        verbose_name_plural = 'Программы'
+        verbose_name = 'Програма'
+        verbose_name_plural = 'Програми'
         ordering = ('name',)
 
 
 class ServerFuture(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Роль/Оснастка сервера', unique=True)
-    display_name = models.CharField(max_length=200, verbose_name='Описание роли')
+    name = models.CharField(max_length=100, verbose_name='Роль сервера', unique=True)
+    display_name = models.CharField(max_length=200, verbose_name='Опис ролі')
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Роль/Оснастка'
-        verbose_name_plural = 'Роли/Оснастки'
+        verbose_name = 'Роль'
+        verbose_name_plural = 'Ролі'
         ordering = ('name',)
 
 
 class ServerService(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Служба\Демон', unique=True)
-    display_name = models.CharField(max_length=200, verbose_name='Описание')
+    name = models.CharField(max_length=100, verbose_name='Сервіс', unique=True)
+    display_name = models.CharField(max_length=200, verbose_name='Опис')
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Служба\Демон'
-        verbose_name_plural = 'Служба\Демон'
+        verbose_name = 'Сервіс'
+        verbose_name_plural = 'Сервіси'
         ordering = ('name',)

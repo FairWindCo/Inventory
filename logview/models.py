@@ -6,8 +6,8 @@ from info.models import Server
 
 class ServerModificationLog(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE, verbose_name='Сервер')
-    seen = models.DateTimeField(auto_now_add=True, verbose_name='Дата события')
-    description = models.CharField(max_length=255, verbose_name='Описание')
+    seen = models.DateTimeField(auto_now_add=True, verbose_name='Дата')
+    description = models.CharField(max_length=255, verbose_name='Опис')
 
     class Meta:
         verbose_name = 'Журнал'

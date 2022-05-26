@@ -25,11 +25,11 @@ class ServerResponseAdmin(admin.TabularInline):
     def display_role(self, obj):
         return obj.role.name if obj.role else '-'
 
-    @display(description='Ответственность')
+    @display(description='Відповідальність')
     def display_response(self, obj):
         return obj.response.name if obj.response else '-'
 
-    @display(description='Примечание')
+    @display(description='Примітка')
     def display_note(self, obj):
         if len(obj.description) > 40:
             return f'{obj.description[:40]}...'
@@ -51,7 +51,7 @@ class ApplicationServerAdmin(admin.ModelAdmin):
     def display_server(self, obj):
         return obj.server.name
 
-    @display(description='Приложение')
+    @display(description='Додаток')
     def display_application(self, obj):
         return obj.application.name
 
@@ -63,7 +63,7 @@ class ApplicationServerAdmin(admin.ModelAdmin):
     # def display_response(self, obj):
     #     return obj.response.name if obj.response else '-'
 
-    @display(description='Примечание')
+    @display(description='Примітка')
     def display_note(self, obj):
         if len(obj.description) > 40:
             return f'{obj.description[:40]}...'
