@@ -7,8 +7,8 @@ from info.models.applications import ApplicationServersSpecification
 class SpecificationProxy(ApplicationServersSpecification):
     class Meta:
         proxy = True
-        verbose_name = 'Назначение серверов'
-        verbose_name_plural = 'Назначение серверов'
+        verbose_name = 'Призначення сервера'
+        verbose_name_plural = 'Призначення серверів'
 
 
 class ResponseInfoAdmin(admin.ModelAdmin):
@@ -25,7 +25,7 @@ class ResponseInfoAdmin(admin.ModelAdmin):
     def display_server(self, obj):
         return obj.application_server.server.name if obj.application_server else '-'
 
-    @display(description='Приложение')
+    @display(description='Додаток')
     def display_application(self, obj):
         return obj.application_server.application.name if obj.application_server else '-'
 
@@ -33,11 +33,11 @@ class ResponseInfoAdmin(admin.ModelAdmin):
     def display_role(self, obj):
         return obj.role.name if obj.role else '-'
 
-    @display(description='Ответственность')
+    @display(description='Відповідальність')
     def display_response(self, obj):
         return obj.response.name if obj.response else '-'
 
-    @display(description='Примечание')
+    @display(description='Примітка')
     def display_note(self, obj):
         if len(obj.description) > 40:
             return f'{obj.description[:40]}...'

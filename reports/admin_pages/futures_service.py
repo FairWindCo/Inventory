@@ -8,8 +8,8 @@ from dictionary.models import ServerFuture, ServerService
 class FutureAdminProxy(ServerFuture):
     class Meta:
         proxy = True
-        verbose_name = 'Роли'
-        verbose_name_plural = 'Роли'
+        verbose_name = 'Роль'
+        verbose_name_plural = 'Ролі'
 
 
 class SoftFutureAdmin(admin.ModelAdmin):
@@ -19,7 +19,7 @@ class SoftFutureAdmin(admin.ModelAdmin):
     readonly_fields = ('display_servers',)
     list_filter = ('servers__name',)
 
-    @display(description='Серверы')
+    @display(description='Сервери')
     def display_servers(self, obj):
         infos = [f'{server.name}'
                  for server in obj.servers.all()]
@@ -39,7 +39,7 @@ class DaemonsAdminProxy(ServerService):
     class Meta:
         proxy = True
         verbose_name = 'Служба'
-        verbose_name_plural = 'Службы'
+        verbose_name_plural = 'Служби'
 
 
 class DaemonsAdmin(admin.ModelAdmin):
@@ -49,7 +49,7 @@ class DaemonsAdmin(admin.ModelAdmin):
     readonly_fields = ('display_servers',)
     list_filter = ('servers__name',)
 
-    @display(description='Серверы')
+    @display(description='Сервери')
     def display_servers(self, obj):
         infos = [f'{server.name}'
                  for server in obj.servers.all()]

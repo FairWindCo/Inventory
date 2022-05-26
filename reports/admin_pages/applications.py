@@ -9,15 +9,15 @@ from reports.admin_pages.servers_infos import ServerResponseInfoAdmin
 class AppInfoAdminProxy(ApplicationServers):
     class Meta:
         proxy = True
-        verbose_name = '!СЕРВИС СЕРВЕРОВ'
-        verbose_name_plural = '!СЕРВИСЫ СЕРВЕРОВ'
+        verbose_name = '!СЕРВІСИ СЕРВЕРІВ'
+        verbose_name_plural = '!СЕРВІСИ СЕРВЕРІВ'
 
 
 class AppInfoAProxy(Application):
     class Meta:
         proxy = True
-        verbose_name = 'Сервисы'
-        verbose_name_plural = 'Сервисы'
+        verbose_name = 'Сервіси'
+        verbose_name_plural = 'Сервіси'
 
 
 class ApplicationInfoAdmin(admin.ModelAdmin):
@@ -30,7 +30,7 @@ class ApplicationInfoAdmin(admin.ModelAdmin):
     def display_url(self, obj):
         return mark_safe(f'<a href="{obj.url}">{obj.url}</a>') if obj.url else '-'
 
-    @display(description='Мониторинг URL')
+    @display(description='Моніторінг URL')
     def display_monitor_url(self, obj):
         return mark_safe(f'<a href="{obj.monitoring_url}">{obj.monitoring_url}</a>') if obj.monitoring_url else '-'
 
@@ -56,7 +56,7 @@ class ApplicationServerInfoAdmin(admin.ModelAdmin):
     def display_server(self, obj):
         return obj.server.name
 
-    @display(description='Приложение')
+    @display(description='Додаток')
     def display_application(self, obj):
         return obj.application.name
 
@@ -68,11 +68,11 @@ class ApplicationServerInfoAdmin(admin.ModelAdmin):
     def display_role(self, obj):
         return obj.role.name if obj.role else '-'
 
-    @display(description='Ответственность')
+    @display(description='Відповідальність')
     def display_response(self, obj):
         return obj.response.name if obj.response else '-'
 
-    @display(description='Примечание')
+    @display(description='Примітка')
     def display_note(self, obj):
         if len(obj.description) > 40:
             return f'{obj.description[:40]}...'

@@ -9,7 +9,7 @@ class ServerInfoAdminProxy(Server):
     class Meta:
         proxy = True
         verbose_name = '!СЕРВЕР'
-        verbose_name_plural = '!СЕРВЕРА'
+        verbose_name_plural = '!СЕРВЕРИ'
 
 
 class ServerInfoViewAdmin(admin.ModelAdmin):
@@ -22,7 +22,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('room', 'domain', 'os_name__name', 'applications__name')
 
-    @display(description='Конфигурация')
+    @display(description='Конфігурація')
     def show_configuration(self, obj):
         infos = []
         for hardware in obj.hardware.all():
@@ -39,7 +39,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
                 infos.append(f'{disk.pool_name if disk.pool_name else ""} {hdd_type} - {disk.hdd_size}Gb')
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Приложения')
+    @display(description='Додаток')
     def show_application(self, obj):
         infos = []
         for app in obj.app_info.all():
@@ -52,20 +52,20 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
                              f' ({spec.role.name})')
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Программы')
+    @display(description='ПО')
     def show_soft(self, obj):
         infos = [f'{app.soft.name} - {app.version}'
                  for app in obj.host_soft.all()]
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Роли')
+    @display(description='Ролі')
     def show_roles(self, obj):
         infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
                  for app in obj.futures.all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Службы')
+    @display(description='Служби')
     def show_daemons(self, obj):
         infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
                  for app in obj.daemons.all()]

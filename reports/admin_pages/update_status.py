@@ -9,8 +9,8 @@ from remoting import run, update_update_date
 class ServerAdminProxy(Server):
     class Meta:
         proxy = True
-        verbose_name = 'Обноление Серверов'
-        verbose_name_plural = 'Обноление Серверов'
+        verbose_name = 'Обнолення Серверів'
+        verbose_name_plural = 'Обнолення Серверів'
 
     def days_from_update(self):
         if self.os_last_update:
@@ -28,7 +28,7 @@ class ServerAdminProxy(Server):
                 color = 'red'
             return mark_safe(f'<B style="color: {color}">{td}</B>')
         else:
-            return 'нет данных'
+            return 'немає даних'
 
 
 @admin.action(description='Update Status refresh')

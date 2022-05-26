@@ -9,8 +9,8 @@ from info.models import HostInstalledSoftware
 class SoftInfoAdminProxy(SoftwareCatalog):
     class Meta:
         proxy = True
-        verbose_name = 'Программы'
-        verbose_name_plural = 'Программы'
+        verbose_name = 'Програми'
+        verbose_name_plural = 'Програми'
 
 
 class SoftInfoAdmin(admin.ModelAdmin):
@@ -20,7 +20,7 @@ class SoftInfoAdmin(admin.ModelAdmin):
     readonly_fields = ('display_servers',)
     list_filter = ('installs__server__name',)
 
-    @display(description='Серверы')
+    @display(description='Сервери')
     def display_servers(self, obj):
         infos = [f'<B>{insttals.server.name}:</b> {insttals.soft.name} - {insttals.version}'
                  for insttals in obj.installs.all()]
@@ -39,8 +39,8 @@ class SoftInfoAdmin(admin.ModelAdmin):
 class InstalledSoftInfoAdminProxy(HostInstalledSoftware):
     class Meta:
         proxy = True
-        verbose_name = 'Установленные программы'
-        verbose_name_plural = 'Установленные программы'
+        verbose_name = 'Встановленне ПЗ'
+        verbose_name_plural = 'Встановлення ПЗ'
 
 
 class InstalledSoftInfoAdmin(admin.ModelAdmin):
@@ -52,7 +52,7 @@ class InstalledSoftInfoAdmin(admin.ModelAdmin):
     def display_server(self, obj):
         return obj.server.name
 
-    @display(description='Приложение')
+    @display(description='Додаток')
     def display_application(self, obj):
         return obj.soft.name
 
