@@ -58,5 +58,5 @@ class Server(models.Model):
 
     class Meta:
         verbose_name = 'Сервер'
-        verbose_name_plural = 'Серверы'
+        verbose_name_plural = 'Сервери'
         ordering = ('domain', 'name')

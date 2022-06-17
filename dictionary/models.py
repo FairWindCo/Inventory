@@ -11,7 +11,7 @@ class Domain(models.Model):
     class Meta:
         ordering = ('name',)
         verbose_name = 'Домен'
-        verbose_name_plural = 'Домены'
+        verbose_name_plural = 'Домени'
 
 
 class ServerRoom(models.Model):
