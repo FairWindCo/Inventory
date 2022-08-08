@@ -3,28 +3,30 @@ from django.contrib.admin import display
 from django.utils.safestring import mark_safe
 
 from info.models.applications import ApplicationServers, Application
-from reports.admin_pages.servers_infos import ServerResponseInfoAdmin
+from reports.admin_pages.servers_infos import ServerResponseInfoAdmin, ServersInApplicationInfoAdmin
 
 
 class AppInfoAdminProxy(ApplicationServers):
     class Meta:
         proxy = True
-        verbose_name = '!СЕРВІСИ СЕРВЕРІВ'
-        verbose_name_plural = '!СЕРВІСИ СЕРВЕРІВ'
+        verbose_name = 'СЕРВІС ТА СЕРВЕРИ'
+        verbose_name_plural = '!СЕРВІСИ ТА СЕРВЕРИ'
 
 
 class AppInfoAProxy(Application):
     class Meta:
         proxy = True
-        verbose_name = 'Сервіси'
-        verbose_name_plural = 'Сервіси'
+        verbose_name = 'СЕРВІС'
+        verbose_name_plural = '!СЕРВІСИ'
 
 
 class ApplicationInfoAdmin(admin.ModelAdmin):
+    fields = (
+        'name', 'display_url', 'display_monitor_url', 'description', 'external', 'depends', 'display_dependency')
     search_fields = ('name', 'app_server__server__name', 'url')
     list_display = (
         'name', 'display_url', 'display_monitor_url')
-    list_filter = ('name', 'app_server__server__name',)
+    list_filter = ('external', 'name', 'app_server__server__name',)
 
     @display(description='URL')
     def display_url(self, obj):
@@ -33,6 +35,14 @@ class ApplicationInfoAdmin(admin.ModelAdmin):
     @display(description='Моніторінг URL')
     def display_monitor_url(self, obj):
         return mark_safe(f'<a href="{obj.monitoring_url}">{obj.monitoring_url}</a>') if obj.monitoring_url else '-'
+
+    inlines = [ServersInApplicationInfoAdmin]
+
+    @display(description='Необхідна для')
+    def display_dependency(self, obj):
+        infos = [f'{server.name}'
+                 for server in obj.dependencies.all()]
+        return mark_safe('<BR>'.join(infos))
 
     def has_add_permission(self, request):
         return False

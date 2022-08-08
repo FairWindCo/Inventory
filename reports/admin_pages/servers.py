@@ -8,7 +8,7 @@ from info.models import Server
 class ServerInfoAdminProxy(Server):
     class Meta:
         proxy = True
-        verbose_name = '!СЕРВЕР'
+        verbose_name = 'СЕРВЕР'
         verbose_name_plural = '!СЕРВЕРИ'
 
 
@@ -20,7 +20,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = ('room', 'domain', 'os_name__name', 'applications__name')
+    list_filter = ('external', 'room', 'domain', 'os_name__name', 'applications__name', )
 
     @display(description='Конфігурація')
     def show_configuration(self, obj):

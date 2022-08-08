@@ -6,10 +6,10 @@ from info.models.applications import ApplicationServersSpecification
 
 class ApplicationAdmin(admin.ModelAdmin):
     search_fields = ('name',)
-    list_filter = ('name',)
-    fields = ['name', 'description', 'url', 'responsible']
-    autocomplete_fields = ('responsible',)
-    filter_horizontal = ('responsible',)
+    list_filter = ('name', 'external')
+    fields = ['name', 'description', 'url', 'responsible', 'depends', 'external']
+    autocomplete_fields = ('responsible', 'depends',)
+    filter_horizontal = ('responsible', 'depends',)
     save_as = True
 
 

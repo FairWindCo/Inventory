@@ -11,14 +11,14 @@ class Configuration(models.Model):
     num_virtual = models.PositiveIntegerField(verbose_name='HT count', default=1)
     cpu_type = models.CharField(max_length=200, verbose_name='Процессор', default='virtual')
     ram = models.PositiveIntegerField(verbose_name='RAM, Gb', default=8)
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(verbose_name='Опис')
 
     def __str__(self):
         return f'{self.server.name} {self.platform_name}'
 
     class Meta:
-        verbose_name = 'Конфигурация'
-        verbose_name_plural = 'Конфигурации'
+        verbose_name = 'Конфигурація'
+        verbose_name_plural = 'Конфигурації'
         ordering = ('server__name', 'platform_name')
 
 
@@ -43,7 +43,7 @@ class DiskConfiguration(models.Model):
     configuration = models.ForeignKey(Configuration, on_delete=models.CASCADE, related_name='disks')
     pool_name = models.CharField(max_length=200, verbose_name='Платформа', blank=True, null=True)
     hdd_size = models.PositiveIntegerField(verbose_name='HDD, Gb', default=0)
-    hdd_type = models.PositiveIntegerField(choices=HDDType.choices, blank=True, null=True, verbose_name='Тип диска')
+    hdd_type = models.PositiveIntegerField(choices=HDDType.choices, blank=True, null=True, verbose_name='Тип диску')
     raid_type = models.PositiveIntegerField(choices=HDDType.choices, default=RAIDType.NO_RAID, verbose_name='Тип RAID')
 
     def __str__(self):

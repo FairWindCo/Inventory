@@ -4,6 +4,7 @@ import ipaddress
 import json
 import math
 import os.path
+import re
 import sys
 from urllib.parse import unquote
 
@@ -17,11 +18,22 @@ from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from rsa import PrivateKey, decrypt
 
-from Inventarisation import settings
-from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService
+from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService, ServerScheduledTask
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
+from info.models.applications import HostScheduledTask
 from task_logger.models import ServerTaskReport
 from xls.xls_reader import OSManager
+
+
+def converting_tasks_service_name(name):
+    regexps = [
+        re.compile(r'(.*)(S-[0-9]-[0-9]-[0-9]{1,2}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{3,})'),
+        re.compile(r'(.*)(-[0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})'),
+    ]
+    for reg in regexps:
+        if match := reg.match(name):
+            return f'{match[1]} <Users>'
+    return name
 
 
 def load_key(key_path='private.pem'):
@@ -99,7 +111,6 @@ def process_message(request):
         return HttpResponseForbidden('Incorrect requests type')
 
 
-
 def get_token(request):
     from django.conf import settings
     return JsonResponse({
@@ -121,12 +132,23 @@ def process_time(installed):
         '%d%m%Y',
         '%d/%m/%Y',
         '%d.%m.%Y',
-        '%Y%m%d%H%M%S.%f'
+        '%Y%m%d%H%M%S.%f',
+        '%d.%m.%Y %H:%M:%S',
+        '%d/%m/%Y %H:%M:%S',
+        '%m/%d/%Y %H:%M:%S',
+        '%m.%d.%Y %H:%M:%S',
+        '%H:%M:%S %d.%m.%Y',
+        '%H:%M:%S %d/%m/%Y',
+        '%H:%M:%S %m/%d/%Y',
+        '%H:%M:%S %m.%d.%Y',
     ]:
+        if installed == '01.01.0001 0:00:00':
+            return None
         try:
             return make_aware(timezone.datetime.strptime(installed, format_time), timezone.get_current_timezone())
             # return datetime.datetime.strptime(installed, format_time).astimezone(LOCAL_TZ)
-        except Exception:
+        except Exception as e:
+            # print(e)
             pass
 
 
@@ -167,6 +189,66 @@ def process_soft(server, soft_info):
                                               )
         host_info.save()
     HostInstalledSoftware.objects.filter(server=server).filter(
+        Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+
+
+def process_tasks(server, task_info):
+    check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+    print(len(task_info))
+    for task in task_info:
+        try:
+            print(task)
+            if task['name'] is None or not task['name'] or task['task'] is None:
+                continue
+            if not task['name']:
+                name = task['task']
+            else:
+                name = task['name']
+                last_index = name.rfind('\\')
+                if last_index >= 0:
+                    name = name[last_index + 1:]
+            name = converting_tasks_service_name(name)
+            try:
+                task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
+            except ServerScheduledTask.DoesNotExist:
+                task_i = ServerScheduledTask(name=name, execute_path=task['task'], description=task['comment'])
+                if 'author' in task and task['author']:
+                    author_lower = task['author'].lower()
+                    if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
+                        task_i.silent = True
+                task_i.save()
+
+            try:
+                host_info = HostScheduledTask.objects.get(task=task_i,
+                                                          server=server)
+                host_info.last_check_date = check_date
+                host_info.installation_date = process_time(task['start_time'])
+                host_info.next_run = process_time(task['next_run'])
+                host_info.last_run = process_time(task['last_run'])
+                host_info.run_user = task['runas']
+                host_info.author = task['author']
+                host_info.schedule_type = task['schedule_type']
+                host_info.exit_code = task['last_result']
+                host_info.status = task['status']
+                host_info.schedule = task['schedule']
+            except HostScheduledTask.DoesNotExist:
+                host_info = HostScheduledTask(task=task_i,
+                                              server=server,
+                                              installation_date=process_time(task['start_time']),
+                                              next_run=process_time(task['next_run']),
+                                              last_run=process_time(task['last_run']),
+                                              run_user=task['runas'],
+                                              author=task['author'],
+                                              schedule_type=task['schedule_type'],
+                                              exit_code=task['last_result'],
+                                              status=task['status'],
+                                              schedule=task['schedule'],
+                                              last_check_date=check_date,
+                                              )
+            host_info.save()
+        except Exception as e:
+            print(e, task)
+    HostScheduledTask.objects.filter(server=server).filter(
         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
 
 
@@ -219,10 +301,11 @@ def process_futures(server, futures):
 def process_daemons(server, daemons):
     server.daemons.clear()
     for daemon in daemons:
+        name = converting_tasks_service_name(daemon)
         try:
-            fut = ServerService.objects.get(name=daemon)
+            fut = ServerService.objects.get(name=name)
         except ServerService.DoesNotExist:
-            fut = ServerService(name=daemon)
+            fut = ServerService(name=name)
             fut.save()
         server.daemons.add(fut)
 
@@ -265,6 +348,7 @@ def process_host_info_json(request):
                 process_soft(server, json_data.get('soft', []))
                 process_futures(server, json_data.get('futures', []))
                 process_daemons(server, json_data.get('services', []))
+                process_tasks(server, json_data.get('tasks', []))
                 process_hotfix(server, json_data.get('hotfix', []))
                 if json_data['Manufacturer']:
                     if server.hardware.first():

@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class Domain(models.Model):
-    name = models.CharField(max_length=100, verbose_name='имя домена', unique=True)
+    name = models.CharField(max_length=100, verbose_name='ім`я домену', unique=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -15,9 +15,9 @@ class Domain(models.Model):
 
 
 class ServerRoom(models.Model):
-    name = models.CharField(max_length=100, verbose_name='имя серверной', unique=True)
+    name = models.CharField(max_length=100, verbose_name='Назва серверної кімнати', unique=True)
     net_masks = models.ManyToManyField("IP", related_name='room',
-                                       verbose_name='сетевые маски',
+                                       verbose_name='Мережеві маски, що використовуються у серверній',
                                        blank=True, null=True)
 
     def __str__(self):
@@ -30,7 +30,7 @@ class ServerRoom(models.Model):
 
 
 class OS(models.Model):
-    name = models.CharField(max_length=100, verbose_name='назва ОС', unique=True)
+    name = models.CharField(max_length=100, verbose_name='Назва ОС', unique=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -42,7 +42,7 @@ class OS(models.Model):
 
 
 class IP(models.Model):
-    ip_address = models.GenericIPAddressField(verbose_name='IP адрес', unique=True)
+    ip_address = models.GenericIPAddressField(verbose_name='IP адреса', unique=True)
     mask = models.PositiveIntegerField(verbose_name='Маска', default=32)
 
     def __str__(self):
@@ -64,8 +64,8 @@ class ServerRole(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Призначення додатку'
-        verbose_name_plural = 'Призначення додатків'
+        verbose_name = 'Призначення серверу'
+        verbose_name_plural = 'Призначення серверів'
         ordering = ('name',)
 
 
@@ -83,6 +83,7 @@ class ServerResponse(models.Model):
 
 class SoftwareCatalog(models.Model):
     name = models.CharField(max_length=200, verbose_name='Назва програми', unique=True)
+    silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):
         return f'{self.name}'
@@ -96,24 +97,42 @@ class SoftwareCatalog(models.Model):
 class ServerFuture(models.Model):
     name = models.CharField(max_length=100, verbose_name='Роль сервера', unique=True)
     display_name = models.CharField(max_length=200, verbose_name='Опис ролі')
+    silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Роль'
-        verbose_name_plural = 'Ролі'
+        verbose_name = 'Роль (Future)'
+        verbose_name_plural = 'Ролі (Futures)'
         ordering = ('name',)
 
 
 class ServerService(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Сервіс', unique=True)
+    name = models.CharField(max_length=100, verbose_name='Назва служби чи системного процессу', unique=True)
     display_name = models.CharField(max_length=200, verbose_name='Опис')
+    silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Сервіс'
-        verbose_name_plural = 'Сервіси'
+        verbose_name = 'Служба (Демон)'
+        verbose_name_plural = 'Служби (Демони)'
+        ordering = ('name',)
+
+
+class ServerScheduledTask(models.Model):
+    name = models.CharField(max_length=200, verbose_name='Запланована задача', unique=True)
+    execute_path = models.CharField(max_length=255, verbose_name='Путь до скрипту')
+    silent = models.BooleanField(verbose_name='Приховане значення', default=False)
+    description = models.TextField(verbose_name='Опис', blank=True, null=True)
+
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = 'Автоматична задача'
+        verbose_name_plural = 'Автоматичні задачі'
         ordering = ('name',)

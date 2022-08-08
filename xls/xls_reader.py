@@ -1,3 +1,4 @@
+import abc
 import os
 import re
 import sys
@@ -17,41 +18,43 @@ from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, Serve
 from django.contrib.auth.models import User
 
 
-class BaseManager:
+class BaseManager(abc.ABC):
     cache = {}
     lock = RLock()
 
-    def check_name(self, name):
-        return True if name and name is not None else False
+    def check_name(self, name_el):
+        return True if name_el and name_el is not None else False
 
-    def clean_name(self, name):
-        return name.strip()
+    def clean_name(self, el_name):
+        return el_name.strip()
 
-    def get_value(self, name, **kwargs):
+    def get_value(self, el_name, **kwargs):
         with self.lock:
-            if not self.check_name(name):
+            if not self.check_name(el_name):
                 return None
-            name = self.clean_name(name)
-            value = self.cache.get(name, None)
+            el_name = self.clean_name(el_name)
+            value = self.cache.get(el_name, None)
             if value:
                 return value
-            value = self.get_from_db(name, **kwargs)
+            value = self.get_from_db(el_name, **kwargs)
             if value:
-                self.cache[name] = value
+                self.cache[el_name] = value
             return value
 
-    def find_in_db(self, name):
-        return None
+    @abc.abstractmethod
+    def find_in_db(self, el_name):
+        pass
 
-    def create_in_db(self, name, *args, **kwargs):
-        return None
+    @abc.abstractmethod
+    def create_in_db(self, el_name, *args, **kwargs):
+        pass
 
-    def get_from_db(self, name, **kwargs):
-        value = self.find_in_db(name)
+    def get_from_db(self, el_name, **kwargs):
+        value = self.find_in_db(el_name)
         if value:
             return value
         else:
-            return self.create_in_db(name, **kwargs)
+            return self.create_in_db(el_name, **kwargs)
 
 
 class RoomManager(BaseManager):
@@ -62,95 +65,95 @@ class RoomManager(BaseManager):
         (re.compile(r'[Дд]альняя[\s]*[АфAa]'), 'Дальняя A'),
     )
 
-    def clean_name(self, name):
-        name = super().clean_name(name)
+    def clean_name(self, el_name):
+        el_name = super().clean_name(el_name)
         for match, new_name in self.matcher:
-            if match.match(name):
+            if match.match(el_name):
                 return new_name
-        return name
+        return el_name
 
-    def find_in_db(self, name):
+    def find_in_db(self, el_name):
         try:
-            return ServerRoom.objects.get(name=name)
+            return ServerRoom.objects.get(name=el_name)
         except ServerRoom.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
-        room = ServerRoom(name=name)
+    def create_in_db(self, el_name, **kwargs):
+        room = ServerRoom(name=el_name)
         room.save()
         return room
 
 
 class DomainManager(BaseManager):
 
-    def clean_name(self, name):
-        return super().clean_name(name).lower()
+    def clean_name(self, el_name):
+        return super().clean_name(el_name).lower()
 
-    def find_in_db(self, name):
+    def find_in_db(self, el_name):
         try:
-            return Domain.objects.get(name=name)
+            return Domain.objects.get(name=el_name)
         except Domain.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
-        domain = Domain(name=name)
+    def create_in_db(self, el_name, **kwargs):
+        domain = Domain(name=el_name)
         domain.save()
         return domain
 
 
 class IPManager(BaseManager):
 
-    def check_name(self, name):
-        valid = super().check_name(name)
+    def check_name(self, name_el):
+        valid = super().check_name(name_el)
         if valid:
             try:
                 import ipaddress
-                ipaddress.ip_address(name)
+                ipaddress.ip_address(name_el)
                 return True
             except ValueError:
                 return False
         else:
             return False
 
-    def find_in_db(self, name):
+    def find_in_db(self, el_name):
         try:
-            return IP.objects.get(ip_address=name)
+            return IP.objects.get(ip_address=el_name)
         except IP.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
-        ip = IP(ip_address=name)
+    def create_in_db(self, el_name, **kwargs):
+        ip = IP(ip_address=el_name)
         ip.save()
         return ip
 
 
 class SoftManager(BaseManager):
 
-    def find_in_db(self, name):
+    def find_in_db(self, el_name):
         try:
-            return SoftwareCatalog.objects.get(name=name)
+            return SoftwareCatalog.objects.get(name=el_name)
         except SoftwareCatalog.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
-        soft = SoftwareCatalog(name=name)
+    def create_in_db(self, el_name, **kwargs):
+        soft = SoftwareCatalog(name=el_name)
         soft.save()
         return soft
 
 
 class FutureManager(BaseManager):
 
-    def find_in_db(self, name, **kwargs):
+    def find_in_db(self, el_name, **kwargs):
         try:
-            return ServerFuture.objects.get(name=name)
+            return ServerFuture.objects.get(name=el_name)
         except ServerFuture.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
+    def create_in_db(self, el_name, **kwargs):
         if 'description' in kwargs:
-            soft = ServerFuture(name=name, display_name=kwargs['description'])
+            soft = ServerFuture(name=el_name, display_name=kwargs['description'])
         else:
-            soft = ServerFuture(name=name, **kwargs)
+            soft = ServerFuture(name=el_name, **kwargs)
         soft.save()
         return soft
 
@@ -173,21 +176,21 @@ class OSManager(BaseManager):
         (re.compile(r'.*2003.*'), 'Windows Server 2003'),
     )
 
-    def clean_name(self, name):
-        name = super().clean_name(name)
+    def clean_name(self, el_name):
+        el_name = super().clean_name(el_name)
         for match, new_name in self.matcher:
-            if match.match(name):
+            if match.match(el_name):
                 return new_name
-        return name
+        return el_name
 
-    def find_in_db(self, name):
+    def find_in_db(self, el_name):
         try:
-            return OS.objects.get(name=name)
+            return OS.objects.get(name=el_name)
         except OS.DoesNotExist:
             return None
 
-    def create_in_db(self, name, **kwargs):
-        os = OS(name=name)
+    def create_in_db(self, el_name, **kwargs):
+        os = OS(name=el_name)
         os.save()
         return os
 

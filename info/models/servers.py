@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture, ServerService
-from .applications import HostInstalledSoftware
+from dictionary.models import Domain, ServerRoom, OS, IP, SoftwareCatalog, ServerFuture, ServerService, \
+    ServerScheduledTask
+from .applications import HostInstalledSoftware, HostScheduledTask
 
 
 class Server(models.Model):
@@ -16,6 +17,8 @@ class Server(models.Model):
     daemons = models.ManyToManyField(ServerService, related_name='servers', blank=True)
     installed_soft = models.ManyToManyField(SoftwareCatalog, related_name='servers',
                                             through=HostInstalledSoftware, blank=True)
+    scheduled_tasks = models.ManyToManyField(ServerScheduledTask, related_name='task_servers',
+                                             through=HostScheduledTask, blank=True)
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
     has_internet_access = models.BooleanField(verbose_name='Має вихід в інтернет', default=False)
@@ -32,6 +35,7 @@ class Server(models.Model):
     os_installed = models.DateTimeField(verbose_name='Система встановлена', blank=True, null=True)
     version = models.PositiveIntegerField(verbose_name='ver', default=0, editable=False)
     win_rm_access = models.BooleanField(verbose_name='WinRM доступ', default=True)
+    external = models.BooleanField(verbose_name='Опублікований в Інтернет', default=False)
 
     @property
     def canonical_name(self):

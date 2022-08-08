@@ -1,6 +1,6 @@
 from django.db import models
 
-from dictionary.models import ServerResponse, SoftwareCatalog, ServerRole
+from dictionary.models import ServerResponse, SoftwareCatalog, ServerRole, ServerScheduledTask
 
 
 class ResponsiblePerson(models.Model):
@@ -22,13 +22,16 @@ class Application(models.Model):
     worked_servers = models.ManyToManyField("Server", related_name='applications', blank=True,
                                             through="ApplicationServers")
     responsible = models.ManyToManyField(ResponsiblePerson, blank=True)
+    depends = models.ManyToManyField(to="Application", related_name='dependencies', blank=True,
+                                     verbose_name='Залежить від')
+    external = models.BooleanField(verbose_name='Опублікована в Інтернет', default=False)
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Додаток'
-        verbose_name_plural = 'Додаток'
+        verbose_name = 'Сервіс'
+        verbose_name_plural = 'Сервіс'
         ordering = ('name',)
 
 
@@ -77,11 +80,33 @@ class HostInstalledSoftware(models.Model):
     last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата перевірики')
     is_removed = models.BooleanField(default=False, verbose_name='ПО видалено')
 
-    def __str__(self):
-        return f'{self.server.name} {self.soft.name} {self.version} {self.installation_date}'
-
     class Meta:
         unique_together = (('soft', 'server'),)
-        verbose_name = 'Встановлене ПО'
-        verbose_name_plural = 'Встановлене ПО'
-        ordering = ('server__name', 'soft__name')
+        verbose_name = 'ПО встановлено на сервері'
+        verbose_name_plural = 'ПО встановлено на сервері'
+
+
+class HostScheduledTask(models.Model):
+    task = models.ForeignKey(ServerScheduledTask, on_delete=models.CASCADE, verbose_name='Додаток',
+                             related_name='tasks')
+    server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='host_task')
+    run_user = models.CharField(max_length=50, verbose_name='Користувач', blank=True, null=True)
+    author = models.CharField(max_length=50, verbose_name='Автор', blank=True, null=True)
+    schedule_type = models.CharField(max_length=150, verbose_name='Тип Повторення', blank=True, null=True)
+    schedule = models.CharField(max_length=150, verbose_name='Повторення', blank=True, null=True)
+    installation_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата встановлення')
+    last_run = models.DateTimeField(blank=True, null=True, verbose_name='Дата останього запуску')
+    next_run = models.DateTimeField(blank=True, null=True, verbose_name='Дата наступного запуску')
+    status = models.CharField(max_length=50, verbose_name='Статус', blank=True, null=True)
+    exit_code = models.CharField(max_length=50, verbose_name='Останній код виконання', blank=True, null=True)
+    last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата перевірики')
+    is_removed = models.BooleanField(default=False, verbose_name='Задачу видалено')
+
+    def __str__(self):
+        return f'{self.server.name} {self.task.name} {self.installation_date}'
+
+    class Meta:
+        unique_together = (('task', 'server'),)
+        verbose_name = 'Заплановані задачі'
+        verbose_name_plural = 'Запланована задача'
+        ordering = ('server__name', 'task__name')
