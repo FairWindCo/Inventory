@@ -204,13 +204,14 @@ def process_soft(server, soft_info):
     #     log.save()
     # HostInstalledSoftware.objects.filter(server=server).filter(
     #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
-    remove_deleted_info(HostInstalledSoftware, check_date, server, 'soft')
+    remove_deleted_info(HostInstalledSoftware, check_date, server, 'soft', 'soft.name')
 
 
-def remove_deleted_info(info_class, check_date, server, info_type):
+def remove_deleted_info(info_class, check_date, server, info_type, name_path='name'):
     for obj in info_class.objects.filter(server=server).filter(
             Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
-        log = ServerModificationLog(server=server, description=f'remove {info_type} {obj.name}')
+        name = get_attribute(obj, name_path)
+        log = ServerModificationLog(server=server, description=f'remove {info_type} {name}')
         log.save()
     info_class.objects.filter(server=server).filter(
         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
@@ -287,7 +288,7 @@ def process_tasks(server, task_info):
     #
     # HostScheduledTask.objects.filter(server=server).filter(
     #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
-    remove_deleted_info(HostScheduledTask, check_date, server, 'task')
+    remove_deleted_info(HostScheduledTask, check_date, server, 'task', 'task.name')
 
 
 def process_domain(server, domain_info):
@@ -298,6 +299,17 @@ def process_domain(server, domain_info):
         domain.save()
     server.domain = domain
 
+
+def get_attribute(obj, name):
+    names = name.split('.')
+    for n in names:
+        if hasattr(obj, n):
+            obj = getattr(obj, n)
+        elif n in obj:
+            obj=obj[n]
+        else:
+            obj = 'unknown'
+    return obj
 
 def process_ip(server, ip_info, process_net=None):
     for ip in server.ip_addresses.all():
