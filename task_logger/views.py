@@ -21,6 +21,7 @@ from rsa import PrivateKey, decrypt
 from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFuture, ServerService, ServerScheduledTask
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 from info.models.applications import HostScheduledTask
+from logview.models import ServerModificationLog
 from task_logger.models import ServerTaskReport
 from xls.xls_reader import OSManager
 
@@ -164,6 +165,7 @@ def process_hotfix(server, hotfix_list):
 
 def process_soft(server, soft_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
+    installed_softs = HostInstalledSoftware.objects.filter(server=server).count() > 0
     for soft in soft_info:
         # print(soft)
         if soft['name'] is None:
@@ -178,9 +180,17 @@ def process_soft(server, soft_info):
             host_info = HostInstalledSoftware.objects.get(soft=soft_i,
                                                           server=server)
             host_info.last_check_date = check_date
+            if host_info.version != soft['version']:
+                log = ServerModificationLog(server=server,
+                                            description=f'update soft {soft_i.name} '
+                                                        f'from {host_info.version} to {soft["version"]}')
+                log.save()
             host_info.version = soft['version']
             host_info.installation_date = process_time(soft['installed'])
         except HostInstalledSoftware.DoesNotExist:
+            if installed_softs:
+                log = ServerModificationLog(server=server, description=f'installed new soft {soft_i.name}')
+                log.save()
             host_info = HostInstalledSoftware(soft=soft_i,
                                               server=server,
                                               version=soft['version'],
@@ -188,13 +198,27 @@ def process_soft(server, soft_info):
                                               last_check_date=check_date
                                               )
         host_info.save()
-    HostInstalledSoftware.objects.filter(server=server).filter(
+    # for host_soft in HostInstalledSoftware.objects.filter(server=server).filter(
+    #         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
+    #     log = ServerModificationLog(server=server, description=f'remove soft {host_soft.name}')
+    #     log.save()
+    # HostInstalledSoftware.objects.filter(server=server).filter(
+    #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+    remove_deleted_info(HostInstalledSoftware, check_date, server, 'soft')
+
+
+def remove_deleted_info(info_class, check_date, server, info_type):
+    for obj in info_class.objects.filter(server=server).filter(
+            Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
+        log = ServerModificationLog(server=server, description=f'remove {info_type} {obj.name}')
+        log.save()
+    info_class.objects.filter(server=server).filter(
         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
 
 
 def process_tasks(server, task_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
-    print(len(task_info))
+    installed_tasks = HostScheduledTask.objects.filter(server=server).count() > 0
     for task in task_info:
         try:
             print(task)
@@ -221,6 +245,11 @@ def process_tasks(server, task_info):
             try:
                 host_info = HostScheduledTask.objects.get(task=task_i,
                                                           server=server)
+                if host_info.exit_code != task['last_result'] or host_info.status != task['status']:
+                    log = ServerModificationLog(server=server,
+                                                description=f'task {task.name}  change status {task["status"]} or '
+                                                            f'exit code {task["last_result"]}')
+                    log.save()
                 host_info.last_check_date = check_date
                 host_info.installation_date = process_time(task['start_time'])
                 host_info.next_run = process_time(task['next_run'])
@@ -232,6 +261,9 @@ def process_tasks(server, task_info):
                 host_info.status = task['status']
                 host_info.schedule = task['schedule']
             except HostScheduledTask.DoesNotExist:
+                if installed_tasks:
+                    log = ServerModificationLog(server=server, description=f'new task {task.name}')
+                    log.save()
                 host_info = HostScheduledTask(task=task_i,
                                               server=server,
                                               installation_date=process_time(task['start_time']),
@@ -248,8 +280,14 @@ def process_tasks(server, task_info):
             host_info.save()
         except Exception as e:
             print(e, task)
-    HostScheduledTask.objects.filter(server=server).filter(
-        Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+    # for host_task in HostScheduledTask.objects.filter(server=server).filter(
+    #         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
+    #     log = ServerModificationLog(server=server, description=f'delete task {host_task.name}')
+    #     log.save()
+    #
+    # HostScheduledTask.objects.filter(server=server).filter(
+    #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+    remove_deleted_info(HostScheduledTask, check_date, server, 'task')
 
 
 def process_domain(server, domain_info):
@@ -364,7 +402,7 @@ def process_host_info_json(request):
                         cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
                         cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
                         cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
-                    cpu.description = json_data.get('SystemFamily', None)
+                    cpu.description = json_data.get('SystemFamily', '')
                     cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
                     for disk in cpu.disks.all():
                         disk.delete()
