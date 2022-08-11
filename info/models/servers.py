@@ -7,6 +7,14 @@ from .applications import HostInstalledSoftware, HostScheduledTask
 
 
 class Server(models.Model):
+
+    class ServerState(models.IntegerChoices):
+        OFF = 0, 'Вимкнено'
+        WORK = 1, 'В роботі'
+        DELETED = 2, 'Видалено'
+        RESERVED = 3, 'В резерві'
+        INIT = 4, 'Не ініціалізовано'
+
     name = models.CharField(max_length=50, verbose_name='Ім`я сервера', unique=True)
     domain = models.ForeignKey(Domain, verbose_name='Домен', on_delete=models.PROTECT)
     os_name = models.ForeignKey(OS, verbose_name='ОС', on_delete=models.PROTECT, blank=True, null=True)
@@ -23,7 +31,7 @@ class Server(models.Model):
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
     has_internet_access = models.BooleanField(verbose_name='Має вихід в інтернет', default=False)
     has_monitoring_agent = models.BooleanField(verbose_name='Відслідковується агентом', default=False)
-    is_online = models.BooleanField(verbose_name='В експлуатації', default=True)
+    status = models.IntegerField(verbose_name='Стан', choices=ServerState.choices, default=ServerState.WORK)
     replaced_by = models.ForeignKey("Server", verbose_name='Змінено на', on_delete=models.PROTECT,
                                     related_name="old_uses", blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, editable=False, verbose_name='Запис оновлена')

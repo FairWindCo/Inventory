@@ -15,12 +15,13 @@ class ServerInfoAdminProxy(Server):
 class ServerInfoViewAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     list_display = ('room', 'domain', 'ip_address_set',
-                    'name', 'virtual_server_name', 'os_name', 'os_version', 'is_online', 'os_last_update')
-    readonly_fields = ('show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_daemons')
+                    'name', 'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
+    readonly_fields = (
+        'show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_tasks', 'show_daemons')
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = ('external', 'room', 'domain', 'os_name__name', 'applications__name', )
+    list_filter = ('status', 'external', 'room', 'domain', 'os_name__name', 'applications__name',)
 
     @display(description='Конфігурація')
     def show_configuration(self, obj):
@@ -44,31 +45,42 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
         infos = []
         for app in obj.app_info.all():
             for spec in app.specification.all():
-                print(app.application.name)
-                print(spec.response.name)
-                print(spec.role.name)
-                infos.append(f'{app.application.name} - '
-                             f'{spec.response.name}'
-                             f' ({spec.role.name})')
+                infos.append(f'{app.application.name if app.application else ""} - '
+                             f'{spec.response.name if spec.response else ""}'
+                             f' ({spec.role.name if spec.role else ""})')
         return mark_safe('<BR>'.join(infos))
 
     @display(description='ПО')
     def show_soft(self, obj):
         infos = [f'{app.soft.name} - {app.version}'
-                 for app in obj.host_soft.all()]
+                 for app in obj.host_soft.
+                 filter(soft__silent=False).
+                 order_by('soft__name').
+                 all()]
         return mark_safe('<BR>'.join(infos))
 
     @display(description='Ролі')
     def show_roles(self, obj):
         infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
-                 for app in obj.futures.all()]
+                 for app in obj.futures.
+                 filter(silent=False).order_by('name').all()]
+        # print(infos)
+        return mark_safe('<BR>'.join(infos))
+
+    @display(description='Заплановані завдання')
+    def show_tasks(self, obj):
+        infos = [f'{app.name}'
+                 for app in obj.scheduled_tasks.
+                 filter(silent=False).
+                 order_by('name').
+                 all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 
     @display(description='Служби')
     def show_daemons(self, obj):
         infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
-                 for app in obj.daemons.all()]
+                 for app in obj.daemons.filter(silent=False).all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 

@@ -3,7 +3,8 @@ from django.contrib import admin
 # Register your models here.
 from reports.admin_pages.applications import AppInfoAdminProxy, ApplicationServerInfoAdmin, AppInfoAProxy, \
     ApplicationInfoAdmin
-from reports.admin_pages.futures_service import FutureAdminProxy, SoftFutureAdmin, DaemonsAdminProxy, DaemonsAdmin
+from reports.admin_pages.futures_service import FutureAdminProxy, SoftFutureAdmin, DaemonsAdminProxy, DaemonsAdmin, \
+    ServerTaskAdminProxy, ServerTaskAdmin
 from reports.admin_pages.server_response import SpecificationProxy, ResponseInfoAdmin
 from reports.admin_pages.servers import ServerInfoAdminProxy, ServerInfoViewAdmin
 from reports.admin_pages.softs import SoftInfoAdminProxy, SoftInfoAdmin, InstalledSoftInfoAdmin, \
@@ -19,3 +20,4 @@ admin.site.register(InstalledSoftInfoAdminProxy, InstalledSoftInfoAdmin)
 admin.site.register(SpecificationProxy, ResponseInfoAdmin)
 admin.site.register(FutureAdminProxy, SoftFutureAdmin)
 admin.site.register(DaemonsAdminProxy, DaemonsAdmin)
+admin.site.register(ServerTaskAdminProxy, ServerTaskAdmin)

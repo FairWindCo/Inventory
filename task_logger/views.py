@@ -180,8 +180,18 @@ def process_soft(server, soft_info):
             host_info = HostInstalledSoftware.objects.get(soft=soft_i,
                                                           server=server)
             host_info.last_check_date = check_date
-            if host_info.version != soft['version']:
+            if host_info.is_removed:
                 log = ServerModificationLog(server=server,
+                                            log_type=ServerModificationLog.LogType.INSTALL,
+                                            topic=ServerModificationLog.LogTopic.SOFT,
+                                            description=f're install soft {soft_i.name} '
+                                                        f'from {host_info.version} to {soft["version"]}')
+                log.save()
+                host_info.is_removed = False
+            elif host_info.version != soft['version']:
+                log = ServerModificationLog(server=server,
+                                            log_type=ServerModificationLog.LogType.UPDATE,
+                                            topic=ServerModificationLog.LogTopic.SOFT,
                                             description=f'update soft {soft_i.name} '
                                                         f'from {host_info.version} to {soft["version"]}')
                 log.save()
@@ -189,7 +199,10 @@ def process_soft(server, soft_info):
             host_info.installation_date = process_time(soft['installed'])
         except HostInstalledSoftware.DoesNotExist:
             if installed_softs:
-                log = ServerModificationLog(server=server, description=f'installed new soft {soft_i.name}')
+                log = ServerModificationLog(server=server,
+                                            log_type=ServerModificationLog.LogType.INSTALL,
+                                            topic=ServerModificationLog.LogTopic.SOFT,
+                                            description=f'installed new soft {soft_i.name}')
                 log.save()
             host_info = HostInstalledSoftware(soft=soft_i,
                                               server=server,
@@ -204,14 +217,19 @@ def process_soft(server, soft_info):
     #     log.save()
     # HostInstalledSoftware.objects.filter(server=server).filter(
     #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
-    remove_deleted_info(HostInstalledSoftware, check_date, server, 'soft', 'soft.name')
+    remove_deleted_info(HostInstalledSoftware, check_date, server, 'soft', 'soft.name',
+                        ServerModificationLog.LogTopic.SOFT)
 
 
-def remove_deleted_info(info_class, check_date, server, info_type, name_path='name'):
-    for obj in info_class.objects.filter(server=server).filter(
+def remove_deleted_info(info_class, check_date, server, info_type, name_path='name',
+                        topic=ServerModificationLog.LogTopic.OTHER):
+    for obj in info_class.objects.filter(server=server, is_removed=False).filter(
             Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
         name = get_attribute(obj, name_path)
-        log = ServerModificationLog(server=server, description=f'remove {info_type} {name}')
+        log = ServerModificationLog(server=server,
+                                    log_type=ServerModificationLog.LogType.REMOVED,
+                                    topic=topic,
+                                    description=f'remove {info_type} {name}')
         log.save()
     info_class.objects.filter(server=server).filter(
         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
@@ -246,9 +264,17 @@ def process_tasks(server, task_info):
             try:
                 host_info = HostScheduledTask.objects.get(task=task_i,
                                                           server=server)
-                if host_info.exit_code != task['last_result'] or host_info.status != task['status']:
+                if host_info.is_removed:
                     log = ServerModificationLog(server=server,
-                                                description=f'task {task.name}  change status {task["status"]} or '
+                                                log_type=ServerModificationLog.LogType.INSTALL,
+                                                topic=ServerModificationLog.LogTopic.TASK,
+                                                description=f're setup task {name}')
+                    log.save()
+                elif host_info.exit_code != str(task['last_result']) or host_info.status != str(task['status']):
+                    log = ServerModificationLog(server=server,
+                                                log_type=ServerModificationLog.LogType.UPDATE,
+                                                topic=ServerModificationLog.LogTopic.TASK,
+                                                description=f'task {name}  change status {task["status"]} or '
                                                             f'exit code {task["last_result"]}')
                     log.save()
                 host_info.last_check_date = check_date
@@ -261,9 +287,13 @@ def process_tasks(server, task_info):
                 host_info.exit_code = task['last_result']
                 host_info.status = task['status']
                 host_info.schedule = task['schedule']
+                host_info.is_removed = False
             except HostScheduledTask.DoesNotExist:
                 if installed_tasks:
-                    log = ServerModificationLog(server=server, description=f'new task {task.name}')
+                    log = ServerModificationLog(server=server,
+                                                log_type=ServerModificationLog.LogType.INSTALL,
+                                                topic=ServerModificationLog.LogTopic.TASK,
+                                                description=f'new task {name}')
                     log.save()
                 host_info = HostScheduledTask(task=task_i,
                                               server=server,
@@ -288,7 +318,7 @@ def process_tasks(server, task_info):
     #
     # HostScheduledTask.objects.filter(server=server).filter(
     #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
-    remove_deleted_info(HostScheduledTask, check_date, server, 'task', 'task.name')
+    remove_deleted_info(HostScheduledTask, check_date, server, 'task', 'task.name', ServerModificationLog.LogTopic.TASK)
 
 
 def process_domain(server, domain_info):
@@ -306,10 +336,11 @@ def get_attribute(obj, name):
         if hasattr(obj, n):
             obj = getattr(obj, n)
         elif n in obj:
-            obj=obj[n]
+            obj = obj[n]
         else:
             obj = 'unknown'
     return obj
+
 
 def process_ip(server, ip_info, process_net=None):
     for ip in server.ip_addresses.all():

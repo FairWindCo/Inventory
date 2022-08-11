@@ -59,6 +59,7 @@ class IP(models.Model):
 class ServerRole(models.Model):
     name = models.CharField(max_length=200, verbose_name='Призначення сервера', unique=True)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
+    silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):
         return f'{self.name}'

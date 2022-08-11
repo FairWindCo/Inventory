@@ -6,8 +6,8 @@ from .models import ServerModificationLog
 
 # Register your models here.
 class ServerLogViewAdmin(admin.ModelAdmin):
-    list_display = ('seen', 'display_server', 'description',)
-    list_filter = ('server__name',)
+    list_display = ('seen', 'display_server', 'log_type', 'topic', 'description',)
+    list_filter = ('log_type', 'topic', 'server__name',)
     ordering = ('-seen', 'server__name')
 
     @display(description='Сервер')
