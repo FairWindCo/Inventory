@@ -124,7 +124,7 @@ class ServerService(models.Model):
 
 
 class ServerScheduledTask(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Запланована задача', unique=True)
+    name = models.CharField(max_length=200, verbose_name='Запланована задача')
     execute_path = models.CharField(max_length=255, verbose_name='Путь до скрипту')
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
@@ -134,6 +134,7 @@ class ServerScheduledTask(models.Model):
         return f'{self.name} [{self.execute_path}]'
 
     class Meta:
+        unique_together = ('name', 'execute_path')
         verbose_name = 'Автоматична задача'
         verbose_name_plural = 'Автоматичні задачі'
         ordering = ('name',)
