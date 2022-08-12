@@ -265,7 +265,7 @@ def process_tasks(server, task_info):
                 if last_index >= 0:
                     name = name[last_index + 1:]
             name = converting_tasks_service_name(name)
-            path = task['new_path'] if len(task['new_path']) > 255 else task['task']
+            path = task['new_path'] if len(task['new_path']) < 255 else task['task']
             try:
                 task_i = ServerScheduledTask.objects.get(name=name, execute_path=path)
                 task_i.execute_path = path
@@ -302,7 +302,8 @@ def process_tasks(server, task_info):
                 host_info.last_run = process_time(task['last_run'])
                 host_info.run_user = task['runas']
                 host_info.author = task['author']
-                host_info.schedule_type = task['schedule_type']
+                host_info.schedule_type = task['schedule_type'] if \
+                    len(task['schedule_type']) < 255 else task['schedule_type'][:250] + '...'
                 host_info.exit_code = task['last_result']
                 host_info.status = task['status']
                 host_info.schedule = task['schedule']
