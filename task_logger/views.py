@@ -241,10 +241,12 @@ def process_tasks(server, task_info):
             author_lower = task['author'].lower()
             if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
                 return True
-        path = task['new_path'] if 'new_path' in task else task['path']
+        path = (task['new_path'] if 'new_path' in task else task['path']).lower()
         if path.find('powershell.exe') >= 0:
             return False
-        if path.startswith('%SystemRoot%'):
+        if path == 'com\d-com task':
+            return True
+        if path.startswith('%systemroot%'):
             return True
         if path.startswith('%windir%'):
             return True
