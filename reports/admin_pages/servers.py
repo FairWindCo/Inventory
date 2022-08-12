@@ -69,7 +69,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='Заплановані завдання')
     def show_tasks(self, obj):
-        infos = [f'{app.name}'
+        infos = [f'{app.name} [{app.execute_path}]'
                  for app in obj.scheduled_tasks.
                  filter(silent=False).
                  order_by('name').

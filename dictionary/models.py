@@ -131,7 +131,7 @@ class ServerScheduledTask(models.Model):
 
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.name} [{self.execute_path}]'
 
     class Meta:
         verbose_name = 'Автоматична задача'

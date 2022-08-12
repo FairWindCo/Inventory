@@ -18,6 +18,12 @@ class SoftwareCatalogAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     sortable_by = ('name',)
 
+class TaskCatalogAdmin(admin.ModelAdmin):
+    list_display = ('name', 'execute_path')
+    search_fields = ('name',)
+    sortable_by = ('name',)
+
+
 
 class RoomAdmin(admin.ModelAdmin):
     search_fields = ('name',)
@@ -34,4 +40,4 @@ admin.site.register(ServerRole, SimpleNameAdmin)
 admin.site.register(ServerFuture, SimpleNameAdmin)
 admin.site.register(ServerResponse, SimpleNameAdmin)
 admin.site.register(ServerService, SimpleNameAdmin)
-admin.site.register(ServerScheduledTask, SimpleNameAdmin)
+admin.site.register(ServerScheduledTask, TaskCatalogAdmin)
