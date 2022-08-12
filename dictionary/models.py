@@ -18,7 +18,7 @@ class ServerRoom(models.Model):
     name = models.CharField(max_length=100, verbose_name='Назва серверної кімнати', unique=True)
     net_masks = models.ManyToManyField("IP", related_name='room',
                                        verbose_name='Мережеві маски, що використовуються у серверній',
-                                       blank=True, null=True)
+                                       blank=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -97,7 +97,7 @@ class SoftwareCatalog(models.Model):
 
 class ServerFuture(models.Model):
     name = models.CharField(max_length=100, verbose_name='Роль сервера', unique=True)
-    display_name = models.CharField(max_length=200, verbose_name='Опис ролі')
+    display_name = models.CharField(max_length=200, verbose_name='Опис ролі', blank=True, null=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):
@@ -111,7 +111,7 @@ class ServerFuture(models.Model):
 
 class ServerService(models.Model):
     name = models.CharField(max_length=100, verbose_name='Назва служби чи системного процессу', unique=True)
-    display_name = models.CharField(max_length=200, verbose_name='Опис')
+    display_name = models.CharField(max_length=200, verbose_name='Опис', blank=True, null=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
 
     def __str__(self):

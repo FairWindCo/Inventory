@@ -236,6 +236,20 @@ def remove_deleted_info(info_class, check_date, server, info_type, name_path='na
 
 
 def process_tasks(server, task_info):
+    def check_system_task(name, task):
+        if 'author' in task and task['author']:
+            author_lower = task['author'].lower()
+            if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
+                return True
+        path = task['new_path'] if 'new_path' in task else task['path']
+        if path.find('powershell.exe') >= 0:
+            return False
+        if path.startwidth('%SystemRoot%'):
+            return True
+        if path.startwidth('%windir%'):
+            return True
+        return False
+
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     installed_tasks = HostScheduledTask.objects.filter(server=server).count() > 0
     for task in task_info:
@@ -253,12 +267,11 @@ def process_tasks(server, task_info):
             name = converting_tasks_service_name(name)
             try:
                 task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
+                task_i.silent = check_system_task(name, task)
+                task_i.save()
             except ServerScheduledTask.DoesNotExist:
                 task_i = ServerScheduledTask(name=name, execute_path=task['task'], description=task['comment'])
-                if 'author' in task and task['author']:
-                    author_lower = task['author'].lower()
-                    if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
-                        task_i.silent = True
+                task_i.silent = check_system_task(name, task)
                 task_i.save()
 
             try:

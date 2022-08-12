@@ -8,7 +8,7 @@ class CustomRemoteUserMiddleware(RemoteUserMiddleware):
     header = 'HTTP_X_FORWARDED_SSO'
 
     def process_request(self, request):
-        if settings.DEBUG:
+        if hasattr(settings, 'DEBUG_HEADER_REQUEST') and settings.DEBUG_HEADER_REQUEST:
             print('META\n', "\n".join(request.META.keys()))
             print('HEAD\n', "\n".join(request.headers.keys()))
             print('ENV\n', "\n".join(request.environ.keys()))
