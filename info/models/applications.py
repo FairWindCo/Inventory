@@ -80,6 +80,10 @@ class HostInstalledSoftware(models.Model):
     last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата перевірики')
     is_removed = models.BooleanField(default=False, verbose_name='ПО видалено')
 
+    def __str__(self):
+        return f'{self.server.name} {self.soft.name} {self.version}'
+
+
     class Meta:
         unique_together = (('soft', 'server'),)
         verbose_name = 'ПО встановлено на сервері'

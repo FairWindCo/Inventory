@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import display
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from info.models import Server
@@ -52,7 +53,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='ПО')
     def show_soft(self, obj):
-        infos = [f'{app.soft.name} - {app.version}'
+        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.soft.name} - {app.version}</a>'
                  for app in obj.host_soft.
                  filter(soft__silent=False).
                  order_by('soft__name').
@@ -61,7 +62,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='Ролі')
     def show_roles(self, obj):
-        infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
+        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
                  for app in obj.futures.
                  filter(silent=False).order_by('name').all()]
         # print(infos)
@@ -69,7 +70,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='Заплановані завдання')
     def show_tasks(self, obj):
-        infos = [f'{app.name} [{app.execute_path}]'
+        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} [{app.execute_path}]</a>'
                  for app in obj.scheduled_tasks.
                  filter(silent=False).
                  order_by('name').
@@ -79,10 +80,17 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
 
     @display(description='Служби')
     def show_daemons(self, obj):
-        infos = [f'{app.name} {"- " + app.display_name if app.display_name else ""}'
+        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
                  for app in obj.daemons.filter(silent=False).all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
+
+
+    @staticmethod
+    def get_change_url(obj):
+        app_label = obj._meta.app_label
+        model = obj._meta.model_name
+        return reverse('admin:%s_%s_change' % (app_label, model), args=(obj.id,))
 
     def has_add_permission(self, request):
         return False
