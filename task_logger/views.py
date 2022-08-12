@@ -266,11 +266,15 @@ def process_tasks(server, task_info):
                     name = name[last_index + 1:]
             name = converting_tasks_service_name(name)
             try:
-                task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
-                task_i.silent = check_system_task(name, task)
-                task_i.save()
+                try:
+                    task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['new_path'])
+                except ServerScheduledTask.DoesNotExist:
+                    task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
+                    task_i.execute_path = task['new_path']
+                    task_i.silent = check_system_task(name, task)
+                    task_i.save()
             except ServerScheduledTask.DoesNotExist:
-                task_i = ServerScheduledTask(name=name, execute_path=task['task'], description=task['comment'])
+                task_i = ServerScheduledTask(name=name, execute_path=task['new_path'], description=task['comment'])
                 task_i.silent = check_system_task(name, task)
                 task_i.save()
 
