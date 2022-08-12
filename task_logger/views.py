@@ -244,9 +244,9 @@ def process_tasks(server, task_info):
         path = task['new_path'] if 'new_path' in task else task['path']
         if path.find('powershell.exe') >= 0:
             return False
-        if path.startwidth('%SystemRoot%'):
+        if path.startswith('%SystemRoot%'):
             return True
-        if path.startwidth('%windir%'):
+        if path.startswith('%windir%'):
             return True
         return False
 
