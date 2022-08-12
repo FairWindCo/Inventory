@@ -265,14 +265,17 @@ def process_tasks(server, task_info):
                 if last_index >= 0:
                     name = name[last_index + 1:]
             name = converting_tasks_service_name(name)
+            path = task['new_path'] if len(task['new_path']) > 255 else task['task']
             try:
                 try:
                     print("DETECT TASK NEW PATH", name)
-                    task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['new_path'])
+                    task_i = ServerScheduledTask.objects.get(name=name, execute_path=path)
                 except ServerScheduledTask.DoesNotExist:
                     print("FIND BY OLD PATH", name)
                     task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
-                    task_i.execute_path = task['new_path']
+                    task_i.execute_path = path
+                    if len(task['new_path']) > 255:
+                        task_i.description += task['new_path']
                     task_i.silent = check_system_task(name, task)
                     task_i.save()
             except ServerScheduledTask.DoesNotExist:
