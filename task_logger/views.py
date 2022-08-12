@@ -267,13 +267,16 @@ def process_tasks(server, task_info):
             name = converting_tasks_service_name(name)
             try:
                 try:
+                    print("DETECT TASK NEW PATH", name)
                     task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['new_path'])
                 except ServerScheduledTask.DoesNotExist:
+                    print("FIND BY OLD PATH", name)
                     task_i = ServerScheduledTask.objects.get(name=name, execute_path=task['task'])
                     task_i.execute_path = task['new_path']
                     task_i.silent = check_system_task(name, task)
                     task_i.save()
             except ServerScheduledTask.DoesNotExist:
+                print("Create Task", name)
                 task_i = ServerScheduledTask(name=name, execute_path=task['new_path'], description=task['comment'])
                 task_i.silent = check_system_task(name, task)
                 task_i.save()
