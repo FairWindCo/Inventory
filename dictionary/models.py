@@ -1,4 +1,7 @@
+from ipaddress import ip_address
+
 from django.db import models
+from django.db.models import F, ExpressionWrapper
 
 
 # Create your models here.
@@ -49,6 +52,16 @@ class IP(models.Model):
         if self.mask < 32:
             return f'{self.ip_address}/{self.mask}'
         return f'{self.ip_address}'
+
+    def get_network_address(self):
+        if self.mask == 32:
+            return []
+        print(self.mask)
+        host_part = 32 - self.mask
+        mask = (1 << 32) - (1 << host_part)
+        my_net = int(ip_address(self.ip_address)) & mask
+
+        return [ip for ip in IP.objects.all() if ip.mask == 32 and (int(ip_address(ip.ip_address)) & mask) == my_net]
 
     class Meta:
         verbose_name = 'IP'
@@ -128,7 +141,6 @@ class ServerScheduledTask(models.Model):
     execute_path = models.CharField(max_length=255, verbose_name='Путь до скрипту')
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
-
 
     def __str__(self):
         return f'{self.name} [{self.execute_path}]'

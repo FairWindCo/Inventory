@@ -9,6 +9,7 @@ from reports.admin_pages.server_response import SpecificationProxy, ResponseInfo
 from reports.admin_pages.servers import ServerInfoAdminProxy, ServerInfoViewAdmin
 from reports.admin_pages.softs import SoftInfoAdminProxy, SoftInfoAdmin, InstalledSoftInfoAdmin, \
     InstalledSoftInfoAdminProxy
+from reports.admin_pages.sysinfo_loader import JsonInfoReport
 from reports.admin_pages.update_status import ServerAdminProxy, ServerViewAdmin
 
 admin.site.register(ServerAdminProxy, ServerViewAdmin)
@@ -21,3 +22,4 @@ admin.site.register(SpecificationProxy, ResponseInfoAdmin)
 admin.site.register(FutureAdminProxy, SoftFutureAdmin)
 admin.site.register(DaemonsAdminProxy, DaemonsAdmin)
 admin.site.register(ServerTaskAdminProxy, ServerTaskAdmin)
+JsonInfoReport.register()

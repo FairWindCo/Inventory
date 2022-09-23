@@ -25,15 +25,18 @@ from logview.models import ServerModificationLog
 from task_logger.models import ServerTaskReport
 from xls.xls_reader import OSManager
 
+task_name_regexps = [
+    re.compile(r'(.*)(S-[0-9]-[0-9]-[0-9]{1,2}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{3,})'),
+    re.compile(r'(.*)(-[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
+               r'-[0-9a-fA-F]{4,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10}))'),
+    re.compile(r'(.*)(-\{[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
+               r'-[0-9a-fA-F]{4,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})\})'),
+    re.compile(r'(.*)(-[0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})'),
+]
+
 
 def converting_tasks_service_name(name):
-    regexps = [
-        re.compile(r'(.*)(S-[0-9]-[0-9]-[0-9]{1,2}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{3,})'),
-        re.compile(r'(.*)(-[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
-                   r'-[0-9a-fA-F]{5,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10}))'),
-        re.compile(r'(.*)(-[0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})'),
-    ]
-    for reg in regexps:
+    for reg in task_name_regexps:
         if match := reg.match(name):
             return f'{match[1]} <Users>'
     return name
@@ -75,34 +78,38 @@ def test_request_body(body_text, key=None, key_field_name='key',
                         return data
 
 
+def process_json_report(json_data):
+    if json_data:
+        server_name = json_data.get('host', None)
+        if server_name:
+            try:
+                server_name = server_name.upper()
+                server = Server.objects.get(name=server_name)
+                ndt = datetime.datetime.strptime(json_data['time'],
+                                                 '%a %b %d %H:%M:%S %Y')
+                dt = timezone.make_aware(ndt, timezone.get_current_timezone())
+                report = ServerTaskReport(server=server,
+                                          info=json_data.get('message', None),
+                                          report_date=dt,
+                                          is_error=not json_data.get('is_error', False))
+                report.save()
+
+                return JsonResponse({'result': 'ok'})
+            except Server.DoesNotExist:
+                return JsonResponse({'result': 'error', 'message': 'Unknown server:' + server_name})
+        else:
+            return JsonResponse({'result': 'error', 'message': 'No host name is request'})
+    else:
+        return HttpResponseForbidden('Incorrect requests')
+
+
 @csrf_exempt
 def process_message(request):
     if request.method == 'POST':
         try:
             body_text = request.body
             json_data = test_request_body(body_text.decode())
-            if json_data:
-                server_name = json_data.get('host', None)
-                if server_name:
-                    try:
-                        server_name = server_name.upper()
-                        server = Server.objects.get(name=server_name)
-                        ndt = datetime.datetime.strptime(json_data['time'],
-                                                         '%a %b %d %H:%M:%S %Y')
-                        dt = timezone.make_aware(ndt, timezone.get_current_timezone())
-                        report = ServerTaskReport(server=server,
-                                                  info=json_data.get('message', None),
-                                                  report_date=dt,
-                                                  is_error=not json_data.get('is_error', False))
-                        report.save()
-
-                        return JsonResponse({'result': 'ok'})
-                    except Server.DoesNotExist:
-                        return JsonResponse({'result': 'error', 'message': 'Unknown server:' + server_name})
-                else:
-                    return JsonResponse({'result': 'error', 'message': 'No host name is request'})
-            else:
-                return HttpResponseForbidden('Incorrect requests')
+            return process_json_report(json_data)
         except BaseException as e:
             print(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -251,6 +258,11 @@ def process_tasks(server, task_info):
         if path.startswith('%systemroot%'):
             return True
         if path.startswith('%windir%'):
+            return True
+        check_name = name.lower()
+        if check_name == 'user_feed_synchronization':
+            return True
+        if check_name.startswith('windows defender'):
             return True
         return False
 
@@ -404,6 +416,19 @@ def process_futures(server, futures):
 
 
 def process_daemons(server, daemons):
+    def check_silent_service(name):
+        check_name = name.lower()
+
+        if check_name.startswith('windows push notifications'):
+            return True
+        if check_name.startswith('clipboard user'):
+            return True
+        if check_name.startswith('connected devices platform'):
+            return True
+        if check_name.startswith('user data access'):
+            return True
+        return False
+
     server.daemons.clear()
     for daemon in daemons:
         name = converting_tasks_service_name(daemon)
@@ -411,8 +436,74 @@ def process_daemons(server, daemons):
             fut = ServerService.objects.get(name=name)
         except ServerService.DoesNotExist:
             fut = ServerService(name=name)
+            fut.silent = check_silent_service(name)
             fut.save()
         server.daemons.add(fut)
+
+
+def process_json_info(json_data):
+    if json_data:
+        host = json_data['host'].upper()
+        try:
+            server = Server.objects.get(name=host)
+            networks = None
+        except Server.DoesNotExist:
+            server = Server(name=host)
+            server.room = ServerRoom.objects.first()
+            networks = IP.objects.filter(mask__lt=32).all()
+            server.updated_by = User.objects.first()
+        if server.os_version is None:
+            version_os = json_data.get('Version', None)
+            build = json_data.get('BuildNumber', None)
+            if version_os:
+                version_os = version_os + '.' + build if build else version_os
+            server.os_version = version_os
+        install_time = json_data.get('InstallDate', None)
+        if server.os_installed is None and install_time:
+            server.os_installed = process_time(install_time[:-4])
+        # print(json_data['sysname'])
+        sys_name = json_data.get('sysname', None)
+        if sys_name:
+            osm = OSManager()
+            sys_name = osm.get_value(sys_name)
+            server.os_name = sys_name
+        process_domain(server, json_data['Domain'])
+        server.save()
+        process_ip(server, json_data['ip'], networks)
+        process_soft(server, json_data.get('soft', []))
+        process_futures(server, json_data.get('futures', []))
+        process_daemons(server, json_data.get('services', []))
+        process_tasks(server, json_data.get('tasks', []))
+        process_hotfix(server, json_data.get('hotfix', []))
+        if json_data['Manufacturer']:
+            if server.hardware.first():
+                cpu = server.hardware.first()
+            else:
+                cpu = Configuration(server=server)
+
+            cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
+                                          json_data.get('Model', ''),
+                                          ])
+            cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
+            if json_data['cpu_count'] >= 1:
+                cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
+                cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
+                cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
+            cpu.description = json_data.get('SystemFamily', '')
+            cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
+            for disk in cpu.disks.all():
+                disk.delete()
+            cpu.save()
+            for disk_info in json_data['hdd_info']:
+                d = DiskConfiguration(configuration=cpu)
+                d.pool_name = disk_info['model']
+                d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
+                d.save()
+            cpu.save()
+
+        server.save()
+
+        return JsonResponse({'result': 'ok'})
 
 
 @csrf_exempt
@@ -421,69 +512,8 @@ def process_host_info_json(request):
         try:
             body_text = request.body
             json_data = test_request_body(body_text.decode())
+            return process_json_info(json_data)
 
-            if json_data:
-                host = json_data['host'].upper()
-                try:
-                    server = Server.objects.get(name=host)
-                    networks = None
-                except Server.DoesNotExist:
-                    server = Server(name=host)
-                    server.room = ServerRoom.objects.first()
-                    networks = IP.objects.filter(mask__lt=32).all()
-                    server.updated_by = User.objects.first()
-                if server.os_version is None:
-                    version_os = json_data.get('Version', None)
-                    build = json_data.get('BuildNumber', None)
-                    if version_os:
-                        version_os = version_os + '.' + build if build else version_os
-                    server.os_version = version_os
-                install_time = json_data.get('InstallDate', None)
-                if server.os_installed is None and install_time:
-                    server.os_installed = process_time(install_time[:-4])
-                # print(json_data['sysname'])
-                sys_name = json_data.get('sysname', None)
-                if sys_name:
-                    osm = OSManager()
-                    sys_name = osm.get_value(sys_name)
-                    server.os_name = sys_name
-                process_domain(server, json_data['Domain'])
-                server.save()
-                process_ip(server, json_data['ip'], networks)
-                process_soft(server, json_data.get('soft', []))
-                process_futures(server, json_data.get('futures', []))
-                process_daemons(server, json_data.get('services', []))
-                process_tasks(server, json_data.get('tasks', []))
-                process_hotfix(server, json_data.get('hotfix', []))
-                if json_data['Manufacturer']:
-                    if server.hardware.first():
-                        cpu = server.hardware.first()
-                    else:
-                        cpu = Configuration(server=server)
-
-                    cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
-                                                  json_data.get('Model', ''),
-                                                  ])
-                    cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
-                    if json_data['cpu_count'] >= 1:
-                        cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
-                        cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
-                        cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
-                    cpu.description = json_data.get('SystemFamily', '')
-                    cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
-                    for disk in cpu.disks.all():
-                        disk.delete()
-                    cpu.save()
-                    for disk_info in json_data['hdd_info']:
-                        d = DiskConfiguration(configuration=cpu)
-                        d.pool_name = disk_info['model']
-                        d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
-                        d.save()
-                    cpu.save()
-
-                server.save()
-
-                return JsonResponse({'result': 'ok'})
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
