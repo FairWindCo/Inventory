@@ -18,6 +18,7 @@ from django.urls import path
 
 from task_logger.views import process_message, get_token, process_host_info_json
 
+admin.site.site_header = 'Inventory Portal'
 urlpatterns = [
     path('special', process_message),
     path('token', get_token),

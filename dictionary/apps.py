@@ -4,4 +4,5 @@ from django.apps import AppConfig
 class DictionaryConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'dictionary'
-    verbose_name = 'Довідник'
+    verbose_name = '4. Довідник'
+    tooltip = "Редагування довідників"

@@ -379,7 +379,7 @@ def get_attribute(obj, name):
 
 
 def process_ip(server, ip_info, process_net=None):
-    for ip in server.ip_addresses.all():
+    for ip in server.ip_addresses.filter(comment__isnull=True).all():
         ip.delete()
     server.save()
     for ip in ip_info:

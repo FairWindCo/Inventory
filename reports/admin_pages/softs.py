@@ -7,6 +7,11 @@ from info.models import HostInstalledSoftware
 
 
 class SoftInfoAdminProxy(SoftwareCatalog):
+    help_text = 'Перелік встановлених на серверах програмах' \
+                '(при виборі окремої програми відриється інформація на яких серверах вона встановлена)'
+    form_help_text = 'Конкретна программа, та перелік серверів де вона встановлена'
+    tooltip = 'Інформація про софт, що встановлено на серверах'
+
     class Meta:
         proxy = True
         verbose_name = 'Програми'

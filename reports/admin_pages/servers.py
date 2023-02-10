@@ -7,10 +7,15 @@ from info.models import Server
 
 
 class ServerInfoAdminProxy(Server):
+    help_text = 'Перелік інформації, про всі зареєстровані сервери ' \
+                '(при виборі окремого стерверу відкривається додаткова інформація)'
+    form_help_text = 'Інформація про один конкретний сервер'
+    tooltip = 'Загальна інформація про сервер'
+
     class Meta:
         proxy = True
-        verbose_name = 'СЕРВЕР'
-        verbose_name_plural = '!СЕРВЕРИ'
+        verbose_name = '1. ЗВІТ "СЕРВЕР"'
+        verbose_name_plural = '1. ЗВІТ "СЕРВЕРИ"'
 
 
 class ServerInfoViewAdmin(admin.ModelAdmin):

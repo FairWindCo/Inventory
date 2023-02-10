@@ -7,6 +7,10 @@ from remoting import run, update_update_date
 
 
 class ServerAdminProxy(Server):
+    help_text = 'Звіт про оновлення серверів'
+    form_help_text = 'Інформація про оновлення конкретного серверу'
+    tooltip = 'Звіт про оновлення серверів'
+
     class Meta:
         proxy = True
         verbose_name = 'Обнолення Серверів'
@@ -50,8 +54,7 @@ class ServerViewAdmin(admin.ModelAdmin):
         return super().get_search_results(request, queryset, search_term)
 
     def get_queryset(self, request):
-        # return super().get_queryset(request)
-        return ServerAdminProxy.objects.filter(is_online=True)
+        return super().get_queryset(request)
 
     def has_add_permission(self, request):
         return False

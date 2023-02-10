@@ -7,10 +7,13 @@ from reports.admin_pages.servers_infos import ServerResponseInfoAdmin, ServersIn
 
 
 class AppInfoAdminProxy(ApplicationServers):
+    help_text = 'Звіт описує які портали\додатки з якими серверами пов\'язіні'
+    form_help_text = 'Цей портал або дадаток залежить від роботи наступних серверів'
+
     class Meta:
         proxy = True
-        verbose_name = 'СЕРВІС ТА СЕРВЕРИ'
-        verbose_name_plural = '!СЕРВІСИ ТА СЕРВЕРИ'
+        verbose_name = '3. Зв\'язок порталів та серверів'
+        verbose_name_plural = '3. Зв\'язок порталів та серверів'
 
 
 class AppInfoAProxy(Application):

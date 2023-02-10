@@ -31,9 +31,14 @@ class ServerModificationLog(models.Model):
     log_type = models.IntegerField(choices=LogType.choices, default=LogType.INFO, verbose_name='Тип')
     topic = models.IntegerField(choices=LogTopic.choices, default=LogTopic.OTHER, verbose_name='Розділ')
 
+    help_text = 'Журнал в якій заноситься інформація про зафіксовані зміни в конфігурації серверів'
+    form_help_text = 'Зміни що зафіксовани в інформації про конкретний сервер'
+    tooltip = 'Журнал змін, що відбувалися в конфігурації серверу'
+
+
     class Meta:
-        verbose_name = 'Журнал'
-        verbose_name_plural = 'Журнал'
+        verbose_name = 'Журнал змін інформації'
+        verbose_name_plural = 'Журнал змін інформації'
 
     def __str__(self):
         return f'{self.seen.strftime("%d.%m.%y %H:%M:%S")} {self.server.name}'

@@ -5,10 +5,14 @@ from info.models.applications import ApplicationServersSpecification
 
 
 class SpecificationProxy(ApplicationServersSpecification):
+    help_text = 'Опис призначень серверів, за які функції вони відповідають '
+    form_help_text = 'Одна з інсуючих зон відповідальності сервера'
+    tooltip = 'Інформація про зони відповідальності серверів'
+
     class Meta:
         proxy = True
-        verbose_name = 'Призначення сервера'
-        verbose_name_plural = 'Призначення серверів'
+        verbose_name = 'Зони відповідальності серверів'
+        verbose_name_plural = 'Зони відповідальності'
 
 
 class ResponseInfoAdmin(admin.ModelAdmin):

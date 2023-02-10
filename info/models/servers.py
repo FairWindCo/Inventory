@@ -68,7 +68,12 @@ class Server(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    help_text = 'Редагування інформації про сервери'
+    form_help_text = 'Зміна інформації про один конкретний сервер'
+    tooltip = 'Рдактор інформації про сервери'
+
+
     class Meta:
-        verbose_name = 'Сервер'
-        verbose_name_plural = 'Сервери'
+        verbose_name = '1. Сервер'
+        verbose_name_plural = '1. Сервери'
         ordering = ('domain', 'name')

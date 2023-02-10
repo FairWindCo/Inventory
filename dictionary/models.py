@@ -1,12 +1,15 @@
 from ipaddress import ip_address
 
 from django.db import models
-from django.db.models import F, ExpressionWrapper
 
 
 # Create your models here.
 class Domain(models.Model):
     name = models.CharField(max_length=100, verbose_name='ім`я домену', unique=True)
+    help_text = 'Цей довідник використовується для заповнення інформацію про домен до якого включено сервер ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва домену, що буде використана при заповнені інформації про сервер'
+    tooltip = 'Довідник доменів, що використовується в системі'
 
     def __str__(self):
         return f'{self.name}'
@@ -22,6 +25,10 @@ class ServerRoom(models.Model):
     net_masks = models.ManyToManyField("IP", related_name='room',
                                        verbose_name='Мережеві маски, що використовуються у серверній',
                                        blank=True)
+    help_text = 'Цей довідник використовується для заповнення інформацію серверну в якій розміщено сервер ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва серверної, що буде використана при заповнені інформації про сервер'
+    tooltip = 'Довідник серверних, що використовується в системі'
 
     def __str__(self):
         return f'{self.name}'
@@ -34,7 +41,10 @@ class ServerRoom(models.Model):
 
 class OS(models.Model):
     name = models.CharField(max_length=100, verbose_name='Назва ОС', unique=True)
-
+    help_text = 'Цей довідник використовується для заповнення інформацію про сімейство ОС сервера ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва операційної системи, що буде використана при заповнені інформації про сервер'
+    tooltip = 'Довідник ОС, що використовується в системі'
     def __str__(self):
         return f'{self.name}'
 
@@ -47,11 +57,15 @@ class OS(models.Model):
 class IP(models.Model):
     ip_address = models.GenericIPAddressField(verbose_name='IP адреса', unique=True)
     mask = models.PositiveIntegerField(verbose_name='Маска', default=32)
-
+    comment = models.CharField(verbose_name='Коментар', max_length=250, default='', blank=True, null=True)
+    help_text = 'Цей довідник ІР адрес використовується для заповнення інформацію про домен до якого включено сервер ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Заповнюється інформація про конкретну ІР адресу, що використовується сервером'
+    tooltip = 'Довідник ІР, що використовується в системі'
     def __str__(self):
         if self.mask < 32:
-            return f'{self.ip_address}/{self.mask}'
-        return f'{self.ip_address}'
+            return f'{self.ip_address}/{self.mask}{"("+self.comment+")" if self.comment else ""}'
+        return f'{self.ip_address}{"("+self.comment+")" if self.comment else ""}'
 
     def get_network_address(self):
         if self.mask == 32:
@@ -73,6 +87,12 @@ class ServerRole(models.Model):
     name = models.CharField(max_length=200, verbose_name='Призначення сервера', unique=True)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
+    help_text = 'Цей довідник задає перелік доступних в системі "ролей", що виконує сервер. ' \
+                'Використовується при заповненні інформації про існуючи портали ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва призначення серверу, що буде використана при заповнені ' \
+                     'ролі сервера в роботі конкретного порталу чи служби'
+    tooltip = 'Довідник ролей, що використовується в системі'
 
     def __str__(self):
         return f'{self.name}'
@@ -85,7 +105,12 @@ class ServerRole(models.Model):
 
 class ServerResponse(models.Model):
     name = models.CharField(max_length=200, verbose_name='Відповідальність', unique=True)
-
+    help_text = 'Цей довідник задає перелік значень відповідальності, що вказуються в описах порталів, яку' \
+                'відповідальність несе конкретний сервер в роботі вказаного порталу ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Відповідальність, що вказуються в описах порталів, якє' \
+                ' значення має робота сервера для вказаного порталу'
+    tooltip = 'Довідник "Відповідальностей серверів", що використовується в системі'
     def __str__(self):
         return f'{self.name}'
 
@@ -98,13 +123,17 @@ class ServerResponse(models.Model):
 class SoftwareCatalog(models.Model):
     name = models.CharField(max_length=200, verbose_name='Назва програми', unique=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
+    help_text = 'Цей довідник назв програм, що встановлені на сервери ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва программи, що встановлена на сервер без версії'
+    tooltip = 'Довідник назв программ, що використовується в системі'
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Програма'
-        verbose_name_plural = 'Програми'
+        verbose_name = 'Програма (Soft Name)'
+        verbose_name_plural = 'Програми (Softs Name)'
         ordering = ('name',)
 
 
@@ -112,6 +141,10 @@ class ServerFuture(models.Model):
     name = models.CharField(max_length=100, verbose_name='Роль сервера', unique=True)
     display_name = models.CharField(max_length=200, verbose_name='Опис ролі', blank=True, null=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
+    help_text = 'Цей довідник назв Windows Future, що встановлені на сервери ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва Windows Future, що встановлена на сервер без версії'
+    tooltip = 'Довідник назв компонентів системи, що використовується'
 
     def __str__(self):
         return f'{self.name}'
@@ -126,6 +159,10 @@ class ServerService(models.Model):
     name = models.CharField(max_length=100, verbose_name='Назва служби чи системного процессу', unique=True)
     display_name = models.CharField(max_length=200, verbose_name='Опис', blank=True, null=True)
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
+    help_text = 'Цей довідник назв служб та демонів, що працюють на сервері ' \
+                '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Назва служби\демона, що працює на сервері'
+    tooltip = 'Довідник назв служб, що використовується в системі'
 
     def __str__(self):
         return f'{self.name}'
@@ -141,6 +178,10 @@ class ServerScheduledTask(models.Model):
     execute_path = models.CharField(max_length=255, verbose_name='Путь до скрипту')
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
+    help_text = 'Цей довідник завдань (tasks), що працюють на сервері ' \
+                ' (довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
+    form_help_text = 'Опис такси, що працює на сервері'
+    tooltip = 'Довідник автоматичних задач, що використовується в системі'
 
     def __str__(self):
         return f'{self.name} [{self.execute_path}]'

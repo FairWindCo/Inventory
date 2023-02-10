@@ -7,6 +7,10 @@ from info.models.applications import HostScheduledTask
 
 
 class FutureAdminProxy(ServerFuture):
+    help_text = 'Перелік існуючих Future в системі ' \
+                '(якщо вибрати конкретне значення, то буде виведено перелік серверів де вона встановлена)'
+    form_help_text = 'Перелік серверів де встановлена відповідна Future'
+
     class Meta:
         proxy = True
         verbose_name = 'Роль'
@@ -14,6 +18,10 @@ class FutureAdminProxy(ServerFuture):
 
 
 class ServerTaskAdminProxy(HostScheduledTask):
+    help_text = 'Перелік існуючих ScheduledTask про які є інформацыя в системы ' \
+                '(якщо вибрати конкретне значення, то буде виведено перелік серверів де вони виконуються)'
+    form_help_text = 'Перелік серверів де відповідний ScheduledTask встановлено'
+
     class Meta:
         proxy = True
         verbose_name = 'Заплановані Задачі'
@@ -73,6 +81,10 @@ class ServerTaskAdmin(admin.ModelAdmin):
 
 
 class DaemonsAdminProxy(ServerService):
+    help_text = 'Перелік існуючих Service про які є інформацыя в системы ' \
+                '(якщо вибрати конкретне значення, то буде виведено перелік серверів де вони виконуються)'
+    form_help_text = 'Перелік серверів де відповідний Service запущено'
+
     class Meta:
         proxy = True
         verbose_name = 'Служба'

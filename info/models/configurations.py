@@ -13,6 +13,11 @@ class Configuration(models.Model):
     ram = models.PositiveIntegerField(verbose_name='RAM, Gb', default=8)
     description = models.TextField(verbose_name='Опис')
 
+    help_text = 'Редагування загальної конфігурації серверу (RAM, CPU)'
+    form_help_text = 'Редагування значень RAM, CPU для конкретного серверу'
+    tooltip = 'Редактор інформації про RAM, CPU'
+
+
     def __str__(self):
         return f'{self.server.name} {self.platform_name}'
 
@@ -45,6 +50,11 @@ class DiskConfiguration(models.Model):
     hdd_size = models.PositiveIntegerField(verbose_name='HDD, Gb', default=0)
     hdd_type = models.PositiveIntegerField(choices=HDDType.choices, blank=True, null=True, verbose_name='Тип диску')
     raid_type = models.PositiveIntegerField(choices=HDDType.choices, default=RAIDType.NO_RAID, verbose_name='Тип RAID')
+
+    help_text = 'Редагування інфорації про диски на серверах'
+    form_help_text = 'Редагування значень дисків для конкретного серверу'
+    tooltip = 'Редактор інформації про диски'
+
 
     def __str__(self):
         return f'{self.pool_name if self.pool_name else ""} {self.hdd_size}GB'

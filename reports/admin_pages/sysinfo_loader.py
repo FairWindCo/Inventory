@@ -6,13 +6,17 @@ from sysinfo.admin import CustomPageModelAdmin
 from sysinfo.models import CustomModelPage
 
 
-
 class JsonInfoReport(CustomModelPage):
     title = 'Завантажити звіт'  # set page title
 
     # Define some fields.
     my_field = models.FileField('Інформація від сервера')
     # my_relation = models.ForeignKey(MyChildModel1, null=True)
+
+    help_text = 'Спеціальна форма для передачі інформації від автоматизованої утиліти'
+    form_help_text = 'Форма для передачі файлу з конфігурацією серверу від автоматизованної утиліти'
+    tooltip = 'Передача фалів з конфінами знятими з серверами'
+
 
     bound_admin = CustomPageModelAdmin
 
@@ -33,5 +37,3 @@ class JsonInfoReport(CustomModelPage):
                     self.bound_admin.message_error(self.bound_request, "Немає данних")
         except Exception as e:
             self.bound_admin.message_error(self.bound_request, e)
-
-
