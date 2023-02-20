@@ -115,7 +115,7 @@ class ServerResponse(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Відповідальність'
+        verbose_name = 'Відповіmiдальність'
         verbose_name_plural = 'Відповідальності'
         ordering = ('name',)
 
@@ -168,8 +168,8 @@ class ServerService(models.Model):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = 'Служба (Демон)'
-        verbose_name_plural = 'Служби (Демони)'
+        verbose_name = 'Служба (Service)'
+        verbose_name_plural = 'Служби (Service)'
         ordering = ('name',)
 
 

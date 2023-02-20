@@ -3,6 +3,7 @@ from django.contrib.admin import display
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from django_helpers.admin.change_title_admin import ChangeTitleAdminModel
 from info.models import Server
 
 
@@ -14,11 +15,11 @@ class ServerInfoAdminProxy(Server):
 
     class Meta:
         proxy = True
-        verbose_name = '1. ЗВІТ "СЕРВЕР"'
-        verbose_name_plural = '1. ЗВІТ "СЕРВЕРИ"'
+        verbose_name = '1. Сервери'
+        verbose_name_plural = '1. Сервери'
 
 
-class ServerInfoViewAdmin(admin.ModelAdmin):
+class ServerInfoViewAdmin(ChangeTitleAdminModel):
     list_display_links = ('name',)
     list_display = ('room', 'domain', 'ip_address_set',
                     'name', 'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
@@ -46,14 +47,15 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
                 infos.append(f'{disk.pool_name if disk.pool_name else ""} {hdd_type} - {disk.hdd_size}Gb')
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Додаток')
+    @display(description='Сервіс')
     def show_application(self, obj):
         infos = []
         for app in obj.app_info.all():
             for spec in app.specification.all():
-                infos.append(f'{app.application.name if app.application else ""} - '
+                url = reverse('admin:{}_{}_change'.format('reports', 'appinfoaproxy'), args=(app.application.id,))
+                infos.append(f'<a href={url}>{app.application.name if app.application else ""} - '
                              f'{spec.response.name if spec.response else ""}'
-                             f' ({spec.role.name if spec.role else ""})')
+                             f' ({spec.role.name if spec.role else ""})</a>')
         return mark_safe('<BR>'.join(infos))
 
     @display(description='ПО')
@@ -65,7 +67,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
                  all()]
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Ролі')
+    @display(description='Системні ролі (Futures)')
     def show_roles(self, obj):
         infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
                  for app in obj.futures.
@@ -83,7 +85,7 @@ class ServerInfoViewAdmin(admin.ModelAdmin):
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 
-    @display(description='Служби')
+    @display(description='Служби (Services)')
     def show_daemons(self, obj):
         infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
                  for app in obj.daemons.filter(silent=False).all()]

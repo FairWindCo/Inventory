@@ -87,8 +87,8 @@ class DaemonsAdminProxy(ServerService):
 
     class Meta:
         proxy = True
-        verbose_name = 'Служба'
-        verbose_name_plural = 'Служби'
+        verbose_name = 'Служба (Service)'
+        verbose_name_plural = 'Служби (Service)'
 
 
 class DaemonsAdmin(admin.ModelAdmin):

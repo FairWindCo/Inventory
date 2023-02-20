@@ -1,14 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import display
 
-from info.models.applications import ApplicationServersSpecification, ApplicationServers
-
-
-class InlineModelApplicationServersProxy(ApplicationServers):
-    class Meta:
-        proxy = True
-        verbose_name = 'Задіяний сервер'
-        verbose_name_plural = 'Задіяні сервери'
+from info.models.applications import ApplicationServersSpecification
 
 
 class ApplicationServersSpecificationProxy(ApplicationServersSpecification):
@@ -16,20 +9,6 @@ class ApplicationServersSpecificationProxy(ApplicationServersSpecification):
         proxy = True
         verbose_name = 'Призначення сервера'
         verbose_name_plural = 'Призначення серверів'
-
-
-class ServersInApplicationInfoAdmin(admin.TabularInline):
-    model = InlineModelApplicationServersProxy
-    extra = 0
-
-    def has_add_permission(self, request, obj):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class ServerResponseInfoAdmin(admin.TabularInline):

@@ -3,6 +3,7 @@ from django.contrib.admin import display
 from django.utils.safestring import mark_safe
 
 from dictionary.models import SoftwareCatalog
+from django_helpers.admin.change_title_admin import ChangeTitleAdminModel
 from info.models import HostInstalledSoftware
 
 
@@ -18,7 +19,7 @@ class SoftInfoAdminProxy(SoftwareCatalog):
         verbose_name_plural = 'Програми'
 
 
-class SoftInfoAdmin(admin.ModelAdmin):
+class SoftInfoAdmin(ChangeTitleAdminModel):
     search_fields = ('name',)
     list_display = (
         'name',)
@@ -48,7 +49,7 @@ class InstalledSoftInfoAdminProxy(HostInstalledSoftware):
         verbose_name_plural = 'Встановлення ПЗ'
 
 
-class InstalledSoftInfoAdmin(admin.ModelAdmin):
+class InstalledSoftInfoAdmin(ChangeTitleAdminModel):
     search_fields = ('soft__name', 'server__name', 'version')
     list_display = ('display_application', 'display_server', 'version', 'installation_date', 'is_removed')
     list_filter = ('server__name', 'is_removed')

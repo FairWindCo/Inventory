@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 
+from django_helpers.admin.change_title_admin import ChangeTitleAdminModel
 from info.models import Server
 from remoting import run, update_update_date
 
@@ -13,8 +14,8 @@ class ServerAdminProxy(Server):
 
     class Meta:
         proxy = True
-        verbose_name = 'Обнолення Серверів'
-        verbose_name_plural = 'Обнолення Серверів'
+        verbose_name = 'Оновлення Серверів'
+        verbose_name_plural = 'Оновлення Серверів'
 
     def days_from_update(self):
         if self.os_last_update:
@@ -40,7 +41,7 @@ def make_refresh(modeladmin, request, queryset):
     run(update_update_date, server_list=queryset.all())
 
 
-class ServerViewAdmin(admin.ModelAdmin):
+class ServerViewAdmin(ChangeTitleAdminModel):
     list_display_links = ('name',)
     list_display = ('name', 'domain', 'os_installed',
                     'os_name', 'os_version', 'os_last_update', 'days_from_update',

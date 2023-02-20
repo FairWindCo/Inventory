@@ -12,6 +12,7 @@ from reports.admin_pages.futures_service import FutureAdminProxy, SoftFutureAdmi
     ServerTaskAdminProxy, ServerTaskAdmin
 from reports.admin_pages.server_response import SpecificationProxy, ResponseInfoAdmin
 from reports.admin_pages.servers import ServerInfoAdminProxy, ServerInfoViewAdmin
+from reports.admin_pages.servers_infos import ApplicationServersSpecificationProxy
 from reports.admin_pages.softs import SoftInfoAdminProxy, SoftInfoAdmin, InstalledSoftInfoAdmin, \
     InstalledSoftInfoAdminProxy
 from reports.admin_pages.sysinfo_loader import JsonInfoReport

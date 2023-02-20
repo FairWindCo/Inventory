@@ -55,3 +55,11 @@
   background-color: #4CAF50;
   color: white;
 }
+
+.hidden_column{
+  display: none;
+}
+
+.hidden_column div{
+  display: none;
+}

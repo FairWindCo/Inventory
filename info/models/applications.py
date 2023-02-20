@@ -7,14 +7,17 @@ class ResponsiblePerson(models.Model):
     name = models.CharField(max_length=200, verbose_name='ФІО', unique=True)
     role = models.CharField(max_length=200, verbose_name='Кваліфікації')
     email = models.EmailField(verbose_name='email')
-    help_text = 'Перелік осіб, що відповідають за функціонування конкретного порталу чи продукту'
+    help_text = 'Перелік осіб, що відповідають за функціонування конкретного сервісу'
     form_help_text = 'Редагування даних відповідальної особи, для того, щоб родуміти з ким треба зв\'зуватися'
-    tooltip = 'Редактор списка відповідальних осіб'
+    tooltip = 'Редактор списка осіб відповідальних за роботу сервіса'
 
     class Meta:
-        verbose_name = 'Відповідальні особи'
-        verbose_name_plural = 'Відповідальні особи'
+        verbose_name = 'Особи відповідальні за сервіс'
+        verbose_name_plural = 'Особи відповідальні за сервіс'
         ordering = ('name',)
+
+    def __str__(self):
+        return f'{self.name} {self.role} ({self.email})'
 
 
 class Application(models.Model):
@@ -29,17 +32,17 @@ class Application(models.Model):
                                      verbose_name='Залежить від')
     external = models.BooleanField(verbose_name='Опублікована в Інтернет', default=False)
 
-    help_text = 'Редактор переліку порталів\\додатків, які є доступними для клієнтів '
-    form_help_text = 'Редагування інформації про портал або додаток '
-    tooltip = 'Редагування переліку порталів'
+    help_text = 'Редактор переліку сервісів, які є доступними для клієнтів'
+    form_help_text = 'Редагування інформації про сервіси, що надаються клієнтам'
+    tooltip = 'Редагування описів сервісів, які надаються клієнтам'
 
 
     def __str__(self):
         return f'{self.name}'
 
     class Meta:
-        verbose_name = '2. Портал\\Додаток'
-        verbose_name_plural = '2. Портали\\Додатки'
+        verbose_name = '2. Сервіс'
+        verbose_name_plural = '2. Сервіс'
         ordering = ('name',)
 
 
@@ -53,10 +56,6 @@ class ApplicationServersSpecification(models.Model):
     response_person = models.ForeignKey(ResponsiblePerson, on_delete=models.CASCADE,
                                         verbose_name='Відповідальний співробітник', blank=True,
                                         null=True)
-    help_text = 'Редагування зв\'язку між серверами та порталами'
-    form_help_text = 'Редагування значення серверу для функціонування порталу\\додатку'
-    tooltip = 'Редактор зв\'яків між поталами та серверами'
-
     def __str__(self):
         return f'{self.application_server.application}'
 
@@ -73,17 +72,17 @@ class ApplicationServers(models.Model):
                                             through=ApplicationServersSpecification)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
 
-    help_text = 'Редагування зв\'язку між серверами та порталами'
-    form_help_text = 'Редагування значення серверу для функціонування порталу\\додатку'
-    tooltip = 'Редактор зв\'яків між поталами та серверами'
+    help_text = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
+    form_help_text = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
+    tooltip = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
 
 
     def __str__(self):
         return f'{self.server.name} - {self.application.name}'
 
     class Meta:
-        verbose_name = '3. Сервер для додатка'
-        verbose_name_plural = '3. Сервера для додатка'
+        verbose_name = '3. Зв\'язок Сервер - Сервіс'
+        verbose_name_plural = '3. Зв\'язок Сервер - Сервіс'
         ordering = ('server__name', 'application__name')
 
 
