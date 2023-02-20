@@ -78,7 +78,7 @@ class InlineModelApplicationServersProxy(AppInfoAdminProxy):
 
 
 class ServersInApplicationInfoAdmin(admin.TabularInline):
-    template = 'admin\\edit_inline\\tabular_spec.html'
+    template = 'admin/edit_inline/tabular_spec.html'
     fields = ("display_special_name", 'description', 'server_specifications')
     readonly_fields = ("display_special_name", 'server_specifications',)
     show_change_link = False
