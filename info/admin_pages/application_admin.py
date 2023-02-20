@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import display
 
+from info.admin_pages.inline_admins import ServerSpecificationInlineAdmin
 from info.models.applications import ApplicationServersSpecification
 
 
@@ -11,7 +12,10 @@ class ApplicationAdmin(admin.ModelAdmin):
     autocomplete_fields = ('responsible', 'depends',)
     filter_horizontal = ('responsible', 'depends',)
     save_as = True
-
+    actions_on_top = True
+    actions_on_bottom = True
+    save_on_top = True
+    inlines = [ServerSpecificationInlineAdmin]
 
 class ServerResponseAdmin(admin.TabularInline):
     list_display = (
