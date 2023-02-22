@@ -91,7 +91,7 @@
           {% block content_title %}
                 {% if title %}<h1>
                 {% if cl.model.help_text or adminform.model_admin.model.form_help_text%}
-                    <div class="tooltip button button1">{% translate 'Help' %}
+                    <div class="fw_tooltip button button1">{% translate 'Help' %}
                         <span class="tooltiptext">
                             {% if cl.model.help_text%}{{ cl.model.help_text}}{% endif %}
                             {% if adminform.model_admin.model.form_help_text%}

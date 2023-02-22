@@ -6,7 +6,7 @@
             <table>
                 <caption>
                 {% if opts.app_config.apps.app_configs|get_item:app.app_label|getter:'tooltip'  %}
-                                    <div class="tooltip">&#x1F6C8;
+                                    <div class="fw_tooltip">&#x1F6C8;
                                         <span class="tooltiptext tooltipsmall">{{ opts.app_config.apps.app_configs|get_item:app.app_label|getter:'tooltip' }}</span>
                                     </div>
                 {% endif %}
@@ -19,7 +19,7 @@
                         {% if model.admin_url %}
                             <th scope="row">
                                 {% if model.model.tooltip %}
-                                    <div class="tooltip">&#x1F6C8;
+                                    <div class="fw_tooltip">&#x1F6C8;
                                         <span class="tooltiptext tooltipsmall">{{ model.model.tooltip }}</span>
                                     </div>
                                 {% endif %}

@@ -1,12 +1,12 @@
 /* Tooltip container */
-.tooltip {
+.fw_tooltip {
   position: relative;
   display: inline-block;
   border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
 }
 
 /* Tooltip text */
-.tooltip .tooltiptext {
+.fw_tooltip .tooltiptext {
   visibility: hidden;
   background-color: black;
   color: #fff;
@@ -19,7 +19,7 @@
   z-index: 1;
   left: 105%;
 }
-.tooltip .tooltipsmall {
+.fw_tooltip .tooltipsmall {
   width: 250px;
   left: -10px;
   top: 5px;
@@ -27,7 +27,7 @@
 
 
 /* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
+.fw_tooltip:hover .tooltiptext {
   visibility: visible;
 }
 

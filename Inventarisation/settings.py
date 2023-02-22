@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -27,10 +26,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
+    'baton',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +42,9 @@ INSTALLED_APPS = [
     'reports',
     'task_logger',
     'django_helpers',
-    'sysinfo'
+    'sysinfo',
+    'nested_admin',
+    'baton.autodiscover',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #'django.contrib.auth.middleware.PersistentRemoteUserMiddleware',
+    # 'django.contrib.auth.middleware.PersistentRemoteUserMiddleware',
     'dictionary.remote_user_backend.CustomRemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -84,7 +85,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Inventarisation.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -94,7 +94,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -114,7 +113,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -125,7 +123,6 @@ TIME_ZONE = 'Europe/Kiev'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -141,3 +138,55 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+BATON = {
+    'SITE_HEADER': 'Inventory',
+    'SITE_TITLE': 'Inventory',
+    'INDEX_TITLE': 'Inventory Portal',
+    'CHANGELIST_FILTERS_IN_MODAL': True,
+    'CHANGELIST_FILTERS_FORM': True,
+    'SUPPORT_HREF': '',
+    'COPYRIGHT': '',
+    'POWERED_BY': 'Manenok S.Y.',
+    'HIDE_FOOTER': True,
+    'MENU_TITLE': 'Меню',
+    'MENU': (
+        {
+            'type': 'app',
+            'name': 'reports',
+            'label': 'Звіти',
+            'icon': 'fa fa-circle-info',
+        },
+        {
+            'type': 'app',
+            'name': 'logview',
+            'label': 'Журнал',
+            'icon': 'fa fa-bug',
+        },
+        {
+            'type': 'app',
+            'name': 'info',
+            'label': 'Редактор',
+            'icon': 'fa fa-pen-to-square',
+        },
+        {
+            'type': 'app',
+            'name': 'dictionary',
+            'label': 'Довідники',
+            'icon': 'fa fa-spell-check',
+        },
+        {
+            'type': 'app',
+            'name': 'admin',
+            'label': 'Адміністрування',
+            'icon': 'fa fa-truck-fast',
+        },
+
+        {
+            'type': 'app',
+            'name': 'auth',
+            'label': 'Користувачі',
+            'icon': 'fa fa-lock',
+        },
+    ),
+}

@@ -1,21 +1,35 @@
 from django.contrib import admin
 from django.contrib.admin import display
+from nested_admin.nested import NestedModelAdmin
 
 from info.admin_pages.inline_admins import ServerSpecificationInlineAdmin
 from info.models.applications import ApplicationServersSpecification
 
 
-class ApplicationAdmin(admin.ModelAdmin):
+class ApplicationAdmin(NestedModelAdmin):
     search_fields = ('name',)
     list_filter = ('name', 'external')
-    fields = ['name', 'description', 'url', 'responsible', 'depends', 'external']
+    #fields = ['name', 'description', 'url', 'responsible', 'depends', 'external']
     autocomplete_fields = ('responsible', 'depends',)
     filter_horizontal = ('responsible', 'depends',)
     save_as = True
     actions_on_top = True
-    actions_on_bottom = True
-    save_on_top = True
     inlines = [ServerSpecificationInlineAdmin]
+    fieldsets = (
+        ('Загальне', {
+            'fields': ('name', 'url', 'responsible', 'depends', 'external' ),
+            'classes': ('baton-tabs-init',
+                        'baton-tab-inline-app_server',
+                        'baton-tab-fs-desc',
+                        ),
+            }
+         ),
+        ('Опис', {
+            'fields': ('description',),
+            'classes': ('tab-fs-desc',),
+        }),
+
+    )
 
 class ServerResponseAdmin(admin.TabularInline):
     list_display = (

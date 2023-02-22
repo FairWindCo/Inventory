@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.contrib.admin import display
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -29,6 +28,52 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
     list_filter = ('status', 'external', 'room', 'domain', 'os_name__name', 'applications__name',)
+
+    fieldsets = (
+        ('Загальне', {
+            'fields': ('room', 'domain', 'ip_address_set',
+                       'name', 'virtual_server_name', 'os_name', 'os_version', 'status', ),
+            'classes': ('baton-tabs-init', 'baton-tab-fs-conf', 'baton-tab-fs-serv', 'baton-tab-fs-roles',
+                        'baton-tab-fs-demons','baton-tab-fs-soft','baton-tab-fs-task','baton-tab-fs-other',
+                        ),
+            }
+         ),
+        ('Конфігурація', {
+            'fields': ('show_configuration',),
+            'classes': ('tab-fs-conf',),
+            'description': 'Апаратна конфігурація сервера'
+        }),
+        ('Сервіси', {
+            'fields': ('show_application',),
+            'classes': ('tab-fs-serv',),
+            'description': 'Сервіси в яких задіяни даний сервер'
+        }),
+        ('Ролі', {
+            'fields': ('show_roles',),
+            'classes': ('tab-fs-roles',),
+            'description': 'Системні ролі, що втановлено на сервер'
+        }),
+        ('Служби', {
+            'fields': ('show_daemons',),
+            'classes': ('tab-fs-demons',),
+            'description': 'Служби, що запущені на сервері'
+        }),
+        ('Софт', {
+            'fields': ('show_soft',),
+            'classes': ('tab-fs-soft',),
+            'description': 'ПО встановлено на сервері'
+        }),
+        ('Таски', {
+            'fields': ('show_tasks',),
+            'classes': ('tab-fs-task',),
+            'description': 'Автоматичні завдання, що виконується на сервері'
+        }),
+        ('Різне', {
+            'fields': ('os_last_update', 'os_installed'),
+            'classes': ('tab-fs-other',),
+        }),
+
+    )
 
     @display(description='Конфігурація')
     def show_configuration(self, obj):
@@ -69,9 +114,10 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
 
     @display(description='Системні ролі (Futures)')
     def show_roles(self, obj):
-        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
-                 for app in obj.futures.
-                 filter(silent=False).order_by('name').all()]
+        infos = [
+            f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
+            for app in obj.futures.
+            filter(silent=False).order_by('name').all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
 
@@ -87,11 +133,11 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
 
     @display(description='Служби (Services)')
     def show_daemons(self, obj):
-        infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
-                 for app in obj.daemons.filter(silent=False).all()]
+        infos = [
+            f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} {"- " + app.display_name if app.display_name else ""}</a>'
+            for app in obj.daemons.filter(silent=False).all()]
         # print(infos)
         return mark_safe('<BR>'.join(infos))
-
 
     @staticmethod
     def get_change_url(obj):

@@ -1,0 +1,31 @@
+{% load i18n %}
+{% load baton_tags %}
+{% baton_config_value 'HIDE_FOOTER' as hide_footer %}
+{% block baton_footer %}
+        <div id="footer" class="site-footer">
+            <div class="container-fluid">
+                <div class="row">
+                {% if not hide_footer %}
+                    <div class="col-xs-12 col-sm-4 text-center">
+                        {% if support_href %}
+                            <p>
+                                <a class="btn btn-light btn-sm" href="{{ support_href }}"><i
+                                        class="fa fa-question-circle"></i> {% trans 'Support' %}</a>
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-xs-12 col-sm-4 text-center">
+                        <p>
+                            {{ copyright }}
+                        </p>
+                    </div>
+                    <div class="col-xs-12 col-sm-4 text-center">
+                        <p>
+                            {{ site_title }} · {% blocktrans %}Developed by {{ powered_by }}{% endblocktrans %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+{% endblock %}
