@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 
 from django_helpers.admin.change_title_admin import ChangeTitleAdminModel
 from info.models import Server
+from reports.admin_pages.multi_lookup import StatusListFilter
 
 
 class ServerInfoAdminProxy(Server):
@@ -27,7 +28,7 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = ('status', 'external', 'room', 'domain', 'os_name__name', 'applications__name',)
+    list_filter = (StatusListFilter, 'external', 'room', 'domain', 'os_name__name', 'applications__name',)
 
     fieldsets = (
         ('Загальне', {
