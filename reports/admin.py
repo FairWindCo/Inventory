@@ -10,6 +10,7 @@ from reports.admin_pages.applications import AppInfoAdminProxy, ApplicationServe
     ApplicationInfoAdmin
 from reports.admin_pages.futures_service import FutureAdminProxy, SoftFutureAdmin, DaemonsAdminProxy, DaemonsAdmin, \
     ServerTaskAdminProxy, ServerTaskAdmin
+from reports.admin_pages.ip_adress import IPProxy, IPNetworkReport
 from reports.admin_pages.server_response import SpecificationProxy, ResponseInfoAdmin
 from reports.admin_pages.servers import ServerInfoAdminProxy, ServerInfoViewAdmin
 from reports.admin_pages.servers_infos import ApplicationServersSpecificationProxy
@@ -29,6 +30,8 @@ admin.site.register(SpecificationProxy, ResponseInfoAdmin)
 admin.site.register(FutureAdminProxy, SoftFutureAdmin)
 admin.site.register(DaemonsAdminProxy, DaemonsAdmin)
 admin.site.register(ServerTaskAdminProxy, ServerTaskAdmin)
+admin.site.register(IPProxy, IPNetworkReport)
+
 JsonInfoReport.register()
 class Test(CustomizeAdmin):
     #  custom_list_view = "True"

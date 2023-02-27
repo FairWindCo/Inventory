@@ -1,4 +1,4 @@
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 
 from django.db import models
 
@@ -45,6 +45,7 @@ class OS(models.Model):
                 '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
     form_help_text = 'Назва операційної системи, що буде використана при заповнені інформації про сервер'
     tooltip = 'Довідник ОС, що використовується в системі'
+
     def __str__(self):
         return f'{self.name}'
 
@@ -62,10 +63,21 @@ class IP(models.Model):
                 '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
     form_help_text = 'Заповнюється інформація про конкретну ІР адресу, що використовується сервером'
     tooltip = 'Довідник ІР, що використовується в системі'
+
+    def get_server_names(self):
+        return ','.join([server.name for server in self.servers.all()]) if self.servers else ''
+
     def __str__(self):
         if self.mask < 32:
-            return f'{self.ip_address}/{self.mask}{"("+self.comment+")" if self.comment else ""}'
-        return f'{self.ip_address}{"("+self.comment+")" if self.comment else ""}'
+            return f'{self.ip_address}/{self.mask}{"(" + self.comment + ")" if self.comment else ""}'
+        return f'{self.ip_address}{"(" + self.comment + ")" if self.comment else ""}'
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.mask < 0:
+            self.mask = 0
+        if self.mask < 32:
+            self.ip_address = str(ip_network(f'{self.ip_address}/{self.mask}', False).network_address)
+        super().save(force_insert, force_update, using, update_fields)
 
     def get_network_address(self):
         if self.mask == 32:
@@ -109,8 +121,9 @@ class ServerResponse(models.Model):
                 'відповідальність несе конкретний сервер в роботі вказаного порталу ' \
                 '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
     form_help_text = 'Відповідальність, що вказуються в описах порталів, якє' \
-                ' значення має робота сервера для вказаного порталу'
+                     ' значення має робота сервера для вказаного порталу'
     tooltip = 'Довідник "Відповідальностей серверів", що використовується в системі'
+
     def __str__(self):
         return f'{self.name}'
 
