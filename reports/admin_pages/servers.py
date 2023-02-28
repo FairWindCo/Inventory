@@ -1,4 +1,5 @@
 from django.contrib.admin import display
+from django.contrib.admin.utils import quote
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -20,10 +21,10 @@ class ServerInfoAdminProxy(Server):
 
 
 class ServerInfoViewAdmin(ChangeTitleAdminModel):
-    list_display_links = ('name',)
-    list_display = ('room', 'domain', 'ip_address_set',
-                    'name', 'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
-    readonly_fields = (
+    list_display_links = None
+    list_display = ('room', 'domain', 'show_url_with_description', 'ip_address_set',
+                    'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
+    readonly_fields = ('show_url_with_description',
         'show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_tasks', 'show_daemons')
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
@@ -33,11 +34,12 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     fieldsets = (
         ('Загальне', {
             'fields': ('room', 'domain', 'ip_address_set',
-                       'name', 'virtual_server_name', 'os_name', 'os_version', 'status', ),
+                       'name', 'virtual_server_name', 'os_name', 'os_version', 'status',),
             'classes': ('baton-tabs-init', 'baton-tab-fs-conf', 'baton-tab-fs-serv', 'baton-tab-fs-roles',
-                        'baton-tab-fs-demons','baton-tab-fs-soft','baton-tab-fs-task','baton-tab-fs-other',
+                        'baton-tab-fs-demons', 'baton-tab-fs-soft', 'baton-tab-fs-task', 'baton-tab-fs-other',
+                        'baton-tab-fs-admin',
                         ),
-            }
+        }
          ),
         ('Конфігурація', {
             'fields': ('show_configuration',),
@@ -70,12 +72,29 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
             'description': 'Автоматичні завдання, що виконується на сервері'
         }),
         ('Різне', {
-            'fields': ('os_last_update', 'os_installed'),
+            'fields': ('description', 'replaced_by', 'os_last_update', 'last_update_id', 'win_rm_access', 'external',
+                       'has_internet_access', 'has_monitoring_agent', 'os_installed',),
             'classes': ('tab-fs-other',),
+        }),
+        ('Адміністративні', {
+            'fields': ('created_at', 'updated_at', 'updated_by', 'version'),
+            'classes': ('tab-fs-admin',),
         }),
 
     )
-
+    @display(description='Ім\'я сервера')
+    def show_url_with_description(self, obj):
+        opts = obj._meta
+        obj_url = reverse(
+            "admin:%s_%s_change" % (opts.app_label, opts.model_name),
+            args=(quote(obj.pk),),
+            current_app=self.admin_site.name,
+        )
+        if obj.description:
+            return mark_safe(f"<a href='{obj_url}' class='fw_tooltip'>{obj.name}"
+                             f"<span class='tooltiptext tooltiplong'>{obj.description}</span></a>")
+        else:
+            return mark_safe(f"<a href='{obj_url}'>{obj.name}</a>")
     @display(description='Конфігурація')
     def show_configuration(self, obj):
         infos = []

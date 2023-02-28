@@ -19,7 +19,7 @@ class Server(models.Model):
     domain = models.ForeignKey(Domain, verbose_name='Домен', on_delete=models.PROTECT)
     os_name = models.ForeignKey(OS, verbose_name='ОС', on_delete=models.PROTECT, blank=True, null=True)
     room = models.ForeignKey(ServerRoom, verbose_name='Серверна', on_delete=models.PROTECT)
-    virtual_server_name = models.CharField(max_length=50, verbose_name='Ім`я виртуальної машини', blank=True, null=True)
+    virtual_server_name = models.CharField(max_length=50, verbose_name='*Ім`я виртуальної машини', blank=True, null=True)
     os_version = models.CharField(max_length=50, verbose_name='Версія ОС', blank=True, null=True)
     futures = models.ManyToManyField(ServerFuture, related_name='servers', blank=True, verbose_name='Ролі (Futures)')
     daemons = models.ManyToManyField(ServerService, related_name='servers', blank=True, verbose_name='Сервіси (Services)')
@@ -28,11 +28,11 @@ class Server(models.Model):
     scheduled_tasks = models.ManyToManyField(ServerScheduledTask, related_name='task_servers',
                                              through=HostScheduledTask, blank=True, verbose_name='Запланованы задачі')
     ip_addresses = models.ManyToManyField(IP, related_name='servers')
-    description = models.TextField(verbose_name='Примітки', blank=True, null=True)
-    has_internet_access = models.BooleanField(verbose_name='Має вихід в інтернет', default=False)
-    has_monitoring_agent = models.BooleanField(verbose_name='Відслідковується агентом', default=False)
-    status = models.IntegerField(verbose_name='Стан', choices=ServerState.choices, default=ServerState.WORK)
-    replaced_by = models.ForeignKey("Server", verbose_name='Змінено на', on_delete=models.PROTECT,
+    description = models.TextField(verbose_name='*Примітки', blank=True, null=True)
+    has_internet_access = models.BooleanField(verbose_name='*Має вихід в інтернет', default=False)
+    has_monitoring_agent = models.BooleanField(verbose_name='*Відслідковується агентом', default=False)
+    status = models.IntegerField(verbose_name='*Стан', choices=ServerState.choices, default=ServerState.WORK)
+    replaced_by = models.ForeignKey("Server", verbose_name='*Змінено на', on_delete=models.PROTECT,
                                     related_name="old_uses", blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, editable=False, verbose_name='Запис оновлена')
     created_at = models.DateTimeField(auto_now_add=True, editable=False, verbose_name='Запис створено')
@@ -42,8 +42,8 @@ class Server(models.Model):
     last_update_id = models.CharField(max_length=15, verbose_name='Останній апдейт', blank=True, null=True)
     os_installed = models.DateTimeField(verbose_name='Система встановлена', blank=True, null=True)
     version = models.PositiveIntegerField(verbose_name='ver', default=0, editable=False)
-    win_rm_access = models.BooleanField(verbose_name='WinRM доступ', default=True)
-    external = models.BooleanField(verbose_name='Опублікований в Інтернет', default=False)
+    win_rm_access = models.BooleanField(verbose_name='*WinRM доступ', default=True)
+    external = models.BooleanField(verbose_name='*Опублікований в Інтернет', default=False)
 
     @property
     def canonical_name(self):

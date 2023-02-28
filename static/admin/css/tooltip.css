@@ -19,11 +19,19 @@
   z-index: 1;
   left: 105%;
 }
+
 .fw_tooltip .tooltipsmall {
   width: 250px;
   left: -10px;
   top: 5px;
 }
+.fw_tooltip .tooltiplong {
+    max-width: 1000%;
+    min-width: 500px;
+    left: 10px;
+    top: 1.3em;
+}
+
 
 
 /* Show the tooltip text when you mouse over the tooltip container */

@@ -2,10 +2,11 @@
 {% load static baton_tags %}
 {% load i18n %}
 
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} |
+    {{ site_title|default:_('Django site admin') }}{% endblock %}
 
 {% block extrahead %}
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <script src="{% static 'baton/app/dist/baton.min.js' %}"></script>
     <!-- <script src="http://localhost:8080/static/baton/app/dist/baton.min.js"></script> -->
     {% baton_config as conf %}
@@ -17,10 +18,16 @@
             })
         })(jQuery, undefined)
     </script>
+    <style>
+        body{
+            font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+            font-size: 11pt;
+        }
+    </style>
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
