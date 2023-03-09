@@ -42,7 +42,8 @@ class ServerAdmin(NestedModelAdmin):
             'description': 'Служби, що запущені на сервері'
         }),
         ('Різне', {
-            'fields': ('os_installed', 'win_rm_access', 'has_internet_access', 'has_monitoring_agent',),
+            'fields': ('os_installed', 'os_last_update', 'os_update_search', 'replaced_by',
+                       'win_rm_access', 'has_internet_access', 'has_monitoring_agent',),
             'classes': ('tab-fs-other',),
         }),
         ('Опис', {
