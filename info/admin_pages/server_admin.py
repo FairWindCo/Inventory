@@ -10,7 +10,7 @@ class ServerAdmin(NestedModelAdmin):
     autocomplete_fields = ('domain', 'room', 'os_name', 'ip_addresses', 'futures', 'daemons')
     filter_horizontal = ('ip_addresses', 'futures')
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = ('room', 'domain', 'os_name__name', 'status')
+    list_filter = ('room', 'domain', 'os_name__name', 'status', 'replaced_by')
     save_as = True
     actions_on_top = True
     inlines = [ServerSpecificationInlineAdmin,
