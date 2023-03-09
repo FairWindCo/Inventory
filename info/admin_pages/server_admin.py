@@ -7,10 +7,10 @@ class ServerAdmin(NestedModelAdmin):
     list_display_links = ('name',)
     list_display = ('room', 'domain', 'ip_address_set',
                     'name', 'virtual_server_name', 'os_name', 'os_version', 'status')
-    autocomplete_fields = ('domain', 'room', 'os_name', 'ip_addresses', 'futures', 'daemons')
+    autocomplete_fields = ('domain', 'room', 'os_name', 'ip_addresses', 'futures', 'daemons', 'replaced_by')
     filter_horizontal = ('ip_addresses', 'futures')
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = ('room', 'domain', 'os_name__name', 'status', 'replaced_by')
+    list_filter = ('room', 'domain', 'os_name__name', 'status', 'replaced_by__name')
     save_as = True
     actions_on_top = True
     inlines = [ServerSpecificationInlineAdmin,
@@ -26,8 +26,8 @@ class ServerAdmin(NestedModelAdmin):
                         ),
         }
          ),
-        ('Сервіси', {
-            'fields': ('os_last_update', 'os_update_search', 'last_update_id',),
+        ('Апдейти', {
+            'fields': ('os_installed', 'os_last_update', 'os_update_search', 'last_update_id',),
             'classes': ('tab-fs-upd',),
             'description': 'Сервіси в яких задіяни даний сервер'
         }),
@@ -42,7 +42,7 @@ class ServerAdmin(NestedModelAdmin):
             'description': 'Служби, що запущені на сервері'
         }),
         ('Різне', {
-            'fields': ('os_installed', 'os_last_update', 'os_update_search', 'replaced_by',
+            'fields': ('replaced_by',
                        'win_rm_access', 'has_internet_access', 'has_monitoring_agent',),
             'classes': ('tab-fs-other',),
         }),
