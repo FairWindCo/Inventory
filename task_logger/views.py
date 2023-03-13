@@ -27,10 +27,8 @@ from xls.xls_reader import OSManager
 
 task_name_regexps = [
     re.compile(r'(.*)(S-[0-9]-[0-9]-[0-9]{1,2}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{5,}-[0-9a-fA-F]{3,})'),
-    re.compile(r'(.*)(-[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
-               r'-[0-9a-fA-F]{4,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10}))'),
-    re.compile(r'(.*)(-\{[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
-               r'-[0-9a-fA-F]{4,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})\})'),
+    re.compile(r'(.*)(([ -].[{]?|{)[0-9a-fA-F]{7,9}-[0-9a-fA-F]{4,5}-[0-9a-fA-F]{4,5}'
+               r'-[0-9a-fA-F]{4,}-([0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})[}]?)'),
     re.compile(r'(.*)(-[0-9a-fA-F]{9,}|_[0-9a-fA-F]{5,10})'),
 ]
 
