@@ -22,7 +22,7 @@ class ServerInfoAdminProxy(Server):
 
 class ServerInfoViewAdmin(ChangeTitleAdminModel):
     list_display_links = None
-    list_display = ('room', 'domain', 'show_url_with_description', 'ip_address_set',
+    list_display = ('room', 'domain', 'show_url_with_description', 'show_ips',
                     'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
     readonly_fields = ('show_url_with_description',
         'show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_tasks', 'show_daemons')
@@ -33,7 +33,7 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
 
     fieldsets = (
         ('Загальне', {
-            'fields': ('room', 'domain', 'ip_address_set',
+            'fields': ('room', 'domain', 'show_ips',
                        'name', 'virtual_server_name', 'os_name', 'os_version', 'status',),
             'classes': ('baton-tabs-init', 'baton-tab-fs-conf', 'baton-tab-fs-serv', 'baton-tab-fs-roles',
                         'baton-tab-fs-demons', 'baton-tab-fs-soft', 'baton-tab-fs-task', 'baton-tab-fs-other',
@@ -82,6 +82,10 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
         }),
 
     )
+
+    @display(description='IP')
+    def show_ips(self, obj):
+        return mark_safe('<BR>'.join(str(ip) for ip in obj.ip_addresses.all()))
     @display(description='Ім\'я сервера')
     def show_url_with_description(self, obj):
         opts = obj._meta

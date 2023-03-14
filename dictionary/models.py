@@ -82,7 +82,7 @@ class IP(models.Model):
     def get_network_address(self):
         if self.mask == 32:
             return []
-        print(self.mask)
+        #print(self.mask)
         host_part = 32 - self.mask
         mask = (1 << 32) - (1 << host_part)
         my_net = int(ip_address(self.ip_address)) & mask
