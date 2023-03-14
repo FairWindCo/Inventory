@@ -75,6 +75,16 @@ def test_request_body(body_text, key=None, key_field_name='key',
 
                     if (datetime.datetime.now() - time_value).seconds < timedelta:
                         return data
+                    else:
+                        print("KEY TIME IS VERY OLD")
+                else:
+                    print(f"KEY DON`T START WITH {control_field}")
+            else:
+                print(f"REQUEST HAS EMPTY {key_field_name}={enc_key} {control_value_field}={control_field}")
+        else:
+            print("KEY NOT FOUND")
+    else:
+        print("EMPTY RESPONSE")
 
 
 def process_json_report(json_data):
@@ -530,7 +540,8 @@ def process_host_info_json(request):
         if request.method == 'POST':
             body_text = request.body
             json_data = test_request_body(body_text.decode())
-            return process_json_info(json_data)
+            if json_data:
+                return process_json_info(json_data)
         return HttpResponseForbidden()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
