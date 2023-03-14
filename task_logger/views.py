@@ -77,28 +77,31 @@ def test_request_body(body_text, key=None, key_field_name='key',
 
 
 def process_json_report(json_data):
-    if json_data:
-        server_name = json_data.get('host', None)
-        if server_name:
-            try:
-                server_name = server_name.upper()
-                server = Server.objects.get(name=server_name)
-                ndt = datetime.datetime.strptime(json_data['time'],
-                                                 '%a %b %d %H:%M:%S %Y')
-                dt = timezone.make_aware(ndt, timezone.get_current_timezone())
-                report = ServerTaskReport(server=server,
-                                          info=json_data.get('message', None),
-                                          report_date=dt,
-                                          is_error=not json_data.get('is_error', False))
-                report.save()
+    try:
+        if json_data:
+            server_name = json_data.get('host', None)
+            if server_name:
+                try:
+                    server_name = server_name.upper()
+                    server = Server.objects.get(name=server_name)
+                    ndt = datetime.datetime.strptime(json_data['time'],
+                                                     '%a %b %d %H:%M:%S %Y')
+                    dt = timezone.make_aware(ndt, timezone.get_current_timezone())
+                    report = ServerTaskReport(server=server,
+                                              info=json_data.get('message', None),
+                                              report_date=dt,
+                                              is_error=not json_data.get('is_error', False))
+                    report.save()
 
-                return JsonResponse({'result': 'ok'})
-            except Server.DoesNotExist:
-                return JsonResponse({'result': 'error', 'message': 'Unknown server:' + server_name})
+                    return JsonResponse({'result': 'ok'})
+                except Server.DoesNotExist:
+                    return JsonResponse({'result': 'error', 'message': 'Unknown server:' + server_name})
+            else:
+                return JsonResponse({'result': 'error', 'message': 'No host name is request'})
         else:
-            return JsonResponse({'result': 'error', 'message': 'No host name is request'})
-    else:
-        return HttpResponseForbidden('Incorrect requests')
+            return HttpResponseForbidden('Incorrect requests')
+    except Exception as e:
+        return JsonResponse({'result': 'error', 'message': f'EXCEPTION: {e}'})
 
 
 @csrf_exempt
