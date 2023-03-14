@@ -525,15 +525,14 @@ def process_json_info(json_data):
 
 @csrf_exempt
 def process_host_info_json(request):
-    if request.method == 'POST':
-        try:
+    try:
+        if request.method == 'POST':
             body_text = request.body
             json_data = test_request_body(body_text.decode())
             return process_json_info(json_data)
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
-    return HttpResponseForbidden()
+        return HttpResponseForbidden()
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
