@@ -73,7 +73,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
                     print(decoded_key_value, time_str)
                     time_value = datetime.datetime.strptime(time_str, time_format)
 
-                    if (datetime.datetime.now() - time_value).seconds < timedelta:
+                    if abs((datetime.datetime.now() - time_value).seconds) < timedelta:
                         return data
                     else:
                         print("KEY TIME IS VERY OLD")
