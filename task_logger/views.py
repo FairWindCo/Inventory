@@ -516,7 +516,7 @@ def process_json_info(json_data):
             server.save()
 
             return JsonResponse({'result': 'ok'})
-        return JsonResponse({'result': 'error', 'message': "EMPTY JSON REPORT"})
+        return JsonResponse({'result': 'error', 'message': f"EMPTY JSON REPORT {json_data}"})
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
