@@ -450,71 +450,77 @@ def process_daemons(server, daemons):
 
 
 def process_json_info(json_data):
-    if json_data:
-        host = json_data['host'].upper()
-        try:
-            server = Server.objects.get(name=host)
-            networks = None
-        except Server.DoesNotExist:
-            server = Server(name=host)
-            server.room = ServerRoom.objects.first()
-            networks = IP.objects.filter(mask__lt=32).all()
-            server.updated_by = User.objects.first()
-        if server.os_version is None:
-            version_os = json_data.get('Version', None)
-            build = json_data.get('BuildNumber', None)
-            if version_os:
-                version_os = version_os + '.' + build if build else version_os
-            server.os_version = version_os
-        install_time = json_data.get('InstallDate', None)
-        if server.os_installed is None and install_time:
-            server.os_installed = process_time(install_time[:-4])
-        # print(json_data['sysname'])
-        sys_name = json_data.get('sysname', None)
-        if sys_name:
-            osm = OSManager()
-            sys_name = osm.get_value(sys_name)
-            server.os_name = sys_name
-        process_domain(server, json_data['Domain'])
-        server.save()
-        process_ip(server, json_data['ip'], networks)
-        process_soft(server, json_data.get('soft', []))
-        process_futures(server, json_data.get('futures', []))
-        process_daemons(server, json_data.get('services', []))
-        process_tasks(server, json_data.get('tasks', []))
-        process_hotfix(server, json_data.get('hotfix', []))
-        if json_data['Manufacturer']:
-            if server.hardware.first():
-                cpu = server.hardware.first()
-                may_have_disk = True
-            else:
-                cpu = Configuration(server=server)
-                may_have_disk = False
+    try:
+        if json_data:
+            host = json_data['host'].upper()
+            try:
+                server = Server.objects.get(name=host)
+                networks = None
+            except Server.DoesNotExist:
+                server = Server(name=host)
+                server.room = ServerRoom.objects.first()
+                networks = IP.objects.filter(mask__lt=32).all()
+                server.updated_by = User.objects.first()
+            if server.os_version is None:
+                version_os = json_data.get('Version', None)
+                build = json_data.get('BuildNumber', None)
+                if version_os:
+                    version_os = version_os + '.' + build if build else version_os
+                server.os_version = version_os
+            install_time = json_data.get('InstallDate', None)
+            if server.os_installed is None and install_time:
+                server.os_installed = process_time(install_time[:-4])
+            # print(json_data['sysname'])
+            sys_name = json_data.get('sysname', None)
+            if sys_name:
+                osm = OSManager()
+                sys_name = osm.get_value(sys_name)
+                server.os_name = sys_name
+            process_domain(server, json_data['Domain'])
+            server.save()
+            process_ip(server, json_data['ip'], networks)
+            process_soft(server, json_data.get('soft', []))
+            process_futures(server, json_data.get('futures', []))
+            process_daemons(server, json_data.get('services', []))
+            process_tasks(server, json_data.get('tasks', []))
+            process_hotfix(server, json_data.get('hotfix', []))
+            if json_data['Manufacturer']:
+                if server.hardware.first():
+                    cpu = server.hardware.first()
+                    may_have_disk = True
+                else:
+                    cpu = Configuration(server=server)
+                    may_have_disk = False
 
-            cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
-                                          json_data.get('Model', ''),
-                                          ])
-            cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
-            if json_data['cpu_count'] >= 1:
-                cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
-                cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
-                cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
-            cpu.description = json_data.get('SystemFamily', '')
-            cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
-            if may_have_disk:
-                for disk in cpu.disks.all():
-                    disk.delete()
-            cpu.save()
-            for disk_info in json_data['hdd_info']:
-                d = DiskConfiguration(configuration=cpu)
-                d.pool_name = disk_info['model']
-                d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
-                d.save()
-            cpu.save()
+                cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
+                                              json_data.get('Model', ''),
+                                              ])
+                cpu.num_cpu = json_data.get('NumberOfProcessors', 1)
+                if json_data['cpu_count'] >= 1:
+                    cpu.num_cores = json_data['cpu_info'][0].get('NumberOfCores', 1)
+                    cpu.num_virtual = json_data['cpu_info'][0].get('ThreadCount', 1)
+                    cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
+                cpu.description = json_data.get('SystemFamily', '')
+                cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
+                if may_have_disk:
+                    for disk in cpu.disks.all():
+                        disk.delete()
+                cpu.save()
+                for disk_info in json_data['hdd_info']:
+                    d = DiskConfiguration(configuration=cpu)
+                    d.pool_name = disk_info['model']
+                    d.hdd_size = math.ceil(int(disk_info['size']) / (1024 * 1024 * 1024))
+                    d.save()
+                cpu.save()
 
-        server.save()
+            server.save()
 
-        return JsonResponse({'result': 'ok'})
+            return JsonResponse({'result': 'ok'})
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
 
 
 @csrf_exempt
