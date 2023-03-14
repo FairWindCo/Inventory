@@ -253,6 +253,8 @@ def process_tasks(server, task_info):
             return False
         if path == 'com\d-com task':
             return True
+        if path == 'COM Handler Action':
+            return True
         if path.startswith('%systemroot%'):
             return True
         if path.startswith('%windir%'):
@@ -476,8 +478,10 @@ def process_json_info(json_data):
         if json_data['Manufacturer']:
             if server.hardware.first():
                 cpu = server.hardware.first()
+                may_have_disk = True
             else:
                 cpu = Configuration(server=server)
+                may_have_disk = False
 
             cpu.platform_name = ' '.join([json_data.get('Manufacturer', ''),
                                           json_data.get('Model', ''),
@@ -489,8 +493,9 @@ def process_json_info(json_data):
                 cpu.cpu_type = json_data['cpu_info'][0].get('model', '')
             cpu.description = json_data.get('SystemFamily', '')
             cpu.ram = math.ceil(int(json_data.get('TotalPhysicalMemory', 0)) / (1024 * 1024 * 1024))
-            for disk in cpu.disks.all():
-                disk.delete()
+            if may_have_disk:
+                for disk in cpu.disks.all():
+                    disk.delete()
             cpu.save()
             for disk_info in json_data['hdd_info']:
                 d = DiskConfiguration(configuration=cpu)
