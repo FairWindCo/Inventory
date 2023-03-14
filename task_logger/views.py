@@ -6,6 +6,7 @@ import math
 import os.path
 import re
 import sys
+import traceback
 from urllib.parse import unquote
 
 from django.contrib.auth.models import User
@@ -101,6 +102,10 @@ def process_json_report(json_data):
         else:
             return HttpResponseForbidden('Incorrect requests')
     except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(traceback.format_exc())
+        print(' '.join(["EXCEPTION", str(exc_type), fname, str(exc_tb.tb_lineno)]))
         return JsonResponse({'result': 'error', 'message': f'EXCEPTION: {e}'})
 
 
