@@ -73,7 +73,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
                     print(decoded_key_value, time_str)
                     time_value = datetime.datetime.strptime(time_str, time_format)
                     now_time = datetime.datetime.now()
-                    delta = abs((now_time - time_value).seconds)
+                    delta = abs(now_time.timestamp() - time_value.timestamp())
                     if delta < timedelta:
                         return data
                     else:
