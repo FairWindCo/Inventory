@@ -72,11 +72,14 @@ def test_request_body(body_text, key=None, key_field_name='key',
                     time_str = decoded_key_value[len(control_field):]
                     print(decoded_key_value, time_str)
                     time_value = datetime.datetime.strptime(time_str, time_format)
-                    delta = abs((datetime.datetime.now() - time_value).seconds)
+                    now_time = datetime.datetime.now()
+                    delta = abs((now_time - time_value).seconds)
                     if delta < timedelta:
                         return data
                     else:
-                        print(f"KEY TIME {time_value.strftime('%d.%m.%y %H:%M:%S')} IS VERY OLD {delta} < {timedelta}")
+                        print(f"KEY TIME {time_value.strftime('%d.%m.%y %H:%M:%S')}")
+                        print(f"HOST TIME {now_time.strftime('%d.%m.%y %H:%M:%S')}")
+                        print(f"DELTA IS VERY OLD {delta} >= {timedelta}")
                 else:
                     print(f"KEY DON`T START WITH {control_field}")
             else:
