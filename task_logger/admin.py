@@ -2,7 +2,7 @@ from django.contrib import admin
 # Register your models here.
 from django.contrib.admin import register, display
 
-from task_logger.models import ServerTaskReport
+from task_logger.models import ServerTaskReport, TaskControl, TaskControlGroup
 
 
 @register(ServerTaskReport)
@@ -25,3 +25,20 @@ class TastReportAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+
+@register(TaskControlGroup)
+class ControlGroupAdmin(admin.ModelAdmin):
+    search_fields = ('name', )
+
+
+@register(TaskControl)
+class ControlTaskReportAdmin(admin.ModelAdmin):
+    list_display = ('show_name', 'code', 'last_execute')
+    search_fields = ('host__name', 'code', 'message')
+    autocomplete_fields = ('host', 'control_group')
+    list_filter = ('host__name', 'code')
+    readonly_fields = ('last_execute', 'last_control', 'last_message', 'message', 'status')
+
+    @display(description='Сервер')
+    def show_name(self, obj):
+        return obj.host.name

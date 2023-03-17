@@ -21,3 +21,18 @@ netsh winhttp show proxy
 Сбросить же настройки прокси сервера можно при помощи команды:
 
 Netsh winhttp reset proxy
+
+
+
+gunicorn.conf.py
+________________________________________
+#bind = '127.0.0.1:8000'
+bind = 'unix:/tmp/gunicorn.socket'
+workers = 3
+user = "inventor"
+errorlog="/var/log/gunicorn_err.log"
+worker_class = 'sync'
+#capture_output = True
+worker_connections = 1000
+timeout = 300
+keepalive = 2

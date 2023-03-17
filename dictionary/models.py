@@ -191,6 +191,8 @@ class ServerScheduledTask(models.Model):
     execute_path = models.CharField(max_length=255, verbose_name='Путь до скрипту')
     silent = models.BooleanField(verbose_name='Приховане значення', default=False)
     description = models.TextField(verbose_name='Опис', blank=True, null=True)
+    code = models.CharField(max_length=50, verbose_name='Код задачі для контролю', blank=True, null=True, default=None)
+
     help_text = 'Цей довідник завдань (tasks), що працюють на сервері ' \
                 ' (довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
     form_help_text = 'Опис такси, що працює на сервері'

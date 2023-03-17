@@ -23,7 +23,7 @@ from dictionary.models import IP, Domain, ServerRoom, SoftwareCatalog, ServerFut
 from info.models import Server, HostInstalledSoftware, Configuration, DiskConfiguration
 from info.models.applications import HostScheduledTask
 from logview.models import ServerModificationLog
-from task_logger.models import ServerTaskReport
+from task_logger.models import ServerTaskReport, TaskControl
 from xls.xls_reader import OSManager
 
 task_name_regexps = [
@@ -101,11 +101,25 @@ def process_json_report(json_data):
                     ndt = datetime.datetime.strptime(json_data['time'],
                                                      '%a %b %d %H:%M:%S %Y')
                     dt = timezone.make_aware(ndt, timezone.get_current_timezone())
+                    is_error = not json_data.get('is_error', False)
+                    message = json_data.get('message', None)
                     report = ServerTaskReport(server=server,
-                                              info=json_data.get('message', None),
+                                              info=message,
                                               report_date=dt,
-                                              is_error=not json_data.get('is_error', False))
+                                              is_error=is_error)
                     report.save()
+                    try:
+                        task_code = json_data.get('task_code', None)
+                        task_code = int(task_code) if task_code else None
+                    except ValueError:
+                        task_code = None
+
+                    if task_code and int(task_code) > 0:
+                        task_control, _ = TaskControl.objects.get_or_create(code=task_code, host=server)
+                        task_control.message = message
+                        task_control.status = 1 if not is_error else 0
+                        task_control.last_execute = dt
+                        task_control.save()
 
                     return JsonResponse({'result': 'ok'})
                 except Server.DoesNotExist:

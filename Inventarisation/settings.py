@@ -190,3 +190,10 @@ BATON = {
         },
     ),
 }
+
+MAIL_SEND_REPORT={
+    'server':'web01.local.erc',
+    'port': 25,
+    'from_mail': 'bspd@erc.ua',
+    'to_mail': 'bspd@erc.ua',
+}
