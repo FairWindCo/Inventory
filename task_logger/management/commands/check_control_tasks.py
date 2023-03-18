@@ -2,8 +2,6 @@ import smtplib
 
 from django.core.management import BaseCommand
 from django.utils.timezone import now
-
-from Inventarisation.settings import MAIL_SEND_REPORT
 from task_logger.models import TaskControl
 
 
@@ -25,10 +23,7 @@ def send_mail_mime(message, config):
     return send_mail(msg.as_string(), config)
 
 
-def format_message(report: dict, config: dict):
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
+def get_text_html_part(report: dict):
     plain_message = []
     html_tasks = []
 
@@ -39,13 +34,13 @@ def format_message(report: dict, config: dict):
         for task in reports:
             state = task['state']
             if state is None or state > 0:
-                not_run.append(f"Завдання {task['task_code_name']} на сервере {task['server']}")
+                not_run.append(f"Завдання {task['task_code_name']} на сервері {task['server']}")
             else:
                 if task['error_code']:
                     error_task.append(
-                        f"Завдання {task['task_code_name']}  на сервере {task['server']} - завершена с ошибкой: {task['message']}")
+                        f"Завдання {task['task_code_name']}  на сервері {task['server']} - завершена с ошибкой: {task['message']}")
                 else:
-                    ok_task.append(f"Завдання {task['task_code_name']}  на сервере {task['server']}")
+                    ok_task.append(f"Завдання {task['task_code_name']}  на сервері {task['server']}")
 
         plain_message.append(f"Група завдань: {group}")
         html_tasks.append(f'<h2>Група завдань: {group}</h2>')
@@ -56,7 +51,7 @@ def format_message(report: dict, config: dict):
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', ok_task))
         html_tasks.append("</ul>")
         plain_message.append('ВИКОНАНІ З ПОМИЛКАМИ:')
-        html_tasks.append('<h3>ВИКОНАНІ З ПОМИЛКАМИ:</h3')
+        html_tasks.append('<h3>ВИКОНАНІ З ПОМИЛКАМИ:</h3>')
         plain_message.extend(error_task)
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li style:"color:red;">{a}</li>', error_task))
@@ -67,6 +62,14 @@ def format_message(report: dict, config: dict):
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', not_run))
         html_tasks.append("</ul>")
+
+        return html_tasks, plain_message
+
+def format_message(report: dict, config: dict):
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    html_tasks, plain_message = get_text_html_part(report)
 
     part1 = MIMEText('\n'.join(plain_message), "plain")
     message = MIMEMultipart("alternative")
@@ -79,7 +82,7 @@ def format_message(report: dict, config: dict):
         </div>
       </body>
     </html>
-    """.format(html_tasks)
+    """.format(''.join(html_tasks))
 
     message["From"] = config.get('from_mail', '')
     message["To"] = config.get('to_mail', "bspd@erc.ua")
@@ -97,6 +100,7 @@ class Command(BaseCommand):
     help = 'Check tasks'
 
     def handle(self, *args, **options):
+        from Inventarisation.settings import MAIL_SEND_REPORT
         report = {}
         for control in TaskControl.objects.order_by('control_group', 'code').all():
             need_notify = False
@@ -127,4 +131,5 @@ class Command(BaseCommand):
                 })
                 control.last_message = now()
                 control.save()
+        print(report)
         send_mail_mime(report, MAIL_SEND_REPORT)
