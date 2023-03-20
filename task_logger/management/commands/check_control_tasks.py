@@ -2,6 +2,8 @@ import smtplib
 
 from django.core.management import BaseCommand
 from django.utils.timezone import now
+
+from dictionary.models import ServerScheduledTask
 from task_logger.models import TaskControl
 
 
@@ -65,6 +67,7 @@ def get_text_html_part(report: dict):
 
         return html_tasks, plain_message
 
+
 def format_message(report: dict, config: dict):
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -122,8 +125,14 @@ class Command(BaseCommand):
                     shift = control.period * control.period_multiply
                     state = delta.total_seconds() - shift
 
+                try:
+                    task_desc = ServerScheduledTask.objects.get(code=control.code)
+                    task_name = f'{task_desc.name} ({task_desc.short_desc})'
+                except ServerScheduledTask.DoesNotExist:
+                    task_name = f'Код задачі: {control.code}'
+
                 report[group_name].append({
-                    'task_code_name': control.code,
+                    'task_code_name': task_name,
                     'server': control.host.name,
                     'state': state,
                     'message': control.message,
