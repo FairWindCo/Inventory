@@ -1,3 +1,4 @@
+import platform
 import smtplib
 
 from django.core.management import BaseCommand
@@ -145,3 +146,7 @@ class Command(BaseCommand):
                 control.save()
         print(report)
         send_mail_mime(report, MAIL_SEND_REPORT)
+        server_name = platform.node()
+        self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name)
+        self_control_task.last_execute = now()
+        self_control_task.save()
