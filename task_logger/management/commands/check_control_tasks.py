@@ -127,7 +127,10 @@ class Command(BaseCommand):
 
                 try:
                     task_desc = ServerScheduledTask.objects.get(code=control.code)
-                    task_name = f'{task_desc.name} ({task_desc.short_desc})'
+                    if task_desc.short_desc:
+                        task_name = f'{task_desc.name} ({task_desc.short_desc})'
+                    else:
+                        task_name = f'{task_desc.name}'
                 except ServerScheduledTask.DoesNotExist:
                     task_name = f'Код задачі: {control.code}'
 
