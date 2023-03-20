@@ -106,6 +106,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from Inventarisation.settings import MAIL_SEND_REPORT
         report = {}
+        server_name = platform.node()
+        self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name)
+        self_control_task.last_execute = now()
+        self_control_task.status = 1
+        self_control_task.save()
+
         for control in TaskControl.objects.order_by('control_group', 'code').all():
             need_notify = False
             if control.last_message is None:
@@ -146,7 +152,6 @@ class Command(BaseCommand):
                 control.save()
         print(report)
         send_mail_mime(report, MAIL_SEND_REPORT)
-        server_name = platform.node()
-        self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name)
         self_control_task.last_execute = now()
+        self_control_task.status=0
         self_control_task.save()
