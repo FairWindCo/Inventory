@@ -5,6 +5,7 @@ from django.core.management import BaseCommand
 from django.utils.timezone import now
 
 from dictionary.models import ServerScheduledTask
+from info.models import Server
 from task_logger.models import TaskControl
 
 
@@ -106,11 +107,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from Inventarisation.settings import MAIL_SEND_REPORT
         report = {}
-        server_name = platform.node()
-        self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name)
-        self_control_task.last_execute = now()
-        self_control_task.status = 1
-        self_control_task.save()
+        try:
+            server_name = Server.objects.get(name=platform.node())
+            self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name.id)
+            self_control_task.last_execute = now()
+            self_control_task.status = 1
+            self_control_task.save()
+        except Server.DoesNotExist:
+            self_control_task = None
 
         for control in TaskControl.objects.order_by('control_group', 'code').all():
             need_notify = False
@@ -152,6 +156,7 @@ class Command(BaseCommand):
                 control.save()
         print(report)
         send_mail_mime(report, MAIL_SEND_REPORT)
-        self_control_task.last_execute = now()
-        self_control_task.status=0
-        self_control_task.save()
+        if self_control_task:
+            self_control_task.last_execute = now()
+            self_control_task.status=0
+            self_control_task.save()
