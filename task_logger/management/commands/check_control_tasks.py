@@ -107,7 +107,7 @@ class Command(BaseCommand):
         from Inventarisation.settings import MAIL_SEND_REPORT
         report = {}
         try:
-            server_name = Server.objects.get(name=platform.node())
+            server_name = Server.objects.get(name=platform.node().upper())
             self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name.id)
             self_control_task.last_execute = now()
             self_control_task.status = 1
