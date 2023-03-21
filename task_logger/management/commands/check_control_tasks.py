@@ -108,7 +108,7 @@ class Command(BaseCommand):
         report = {}
         try:
             server_name = Server.objects.get(name=platform.node().upper())
-            self_control_task = TaskControl.objects.get_or_create(code=1, host=server_name)
+            self_control_task, _ = TaskControl.objects.get_or_create(code=1, host=server_name)
             self_control_task.last_execute = now()
             self_control_task.status = 1
             self_control_task.save()
