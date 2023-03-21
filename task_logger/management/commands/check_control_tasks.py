@@ -125,6 +125,7 @@ class Command(BaseCommand):
                 need_notify = delta.total_seconds() > 12 * 60 * 60
             if control.control_group is not None:
                 need_notify = need_notify and control.control_group.send_message
+            print(f'GROUP {control.control_group} LAST NOTIFY: {control.last_message} IS {need_notify}')
             if need_notify:
                 group_name = str(control.control_group)
                 if group_name not in report:
@@ -155,7 +156,8 @@ class Command(BaseCommand):
                 control.last_message = now()
                 control.save()
         print(report)
-        send_mail_mime(report, MAIL_SEND_REPORT)
+        if report:
+            send_mail_mime(report, MAIL_SEND_REPORT)
         if self_control_task:
             self_control_task.last_execute = now()
             self_control_task.status=0
