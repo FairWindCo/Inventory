@@ -35,6 +35,9 @@ def get_text_html_part(report: dict):
         ok_task = []
         error_task = []
         not_run = []
+        plain_message.append(f"Група завдань: {group}")
+        html_tasks.append(f'<h2>Група завдань: {group}</h2>')
+
         for task in reports:
             state = task['state']
             if state is None or state > 0:
@@ -45,11 +48,8 @@ def get_text_html_part(report: dict):
                         f"Завдання {task['task_code_name']}  на сервері {task['server']} - завершена с ошибкой: {task['message']}")
                 else:
                     ok_task.append(f"Завдання {task['task_code_name']}  на сервері {task['server']}")
-
-        plain_message.append(f"Група завдань: {group}")
-        html_tasks.append(f'<h2>Група завдань: {group}</h2>')
-        plain_message.append('Виконані успішно:')
-        html_tasks.append('<h3>Виконані успішно:</h3>')
+        plain_message.append('ВИКОНАНІ УСПІШНО:')
+        html_tasks.append('<h3>ВИКОНАНІ УСПІШНО:</h3>')
         plain_message.extend(ok_task)
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', ok_task))
@@ -66,8 +66,7 @@ def get_text_html_part(report: dict):
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', not_run))
         html_tasks.append("</ul>")
-
-        return html_tasks, plain_message
+    return html_tasks, plain_message
 
 
 def format_message(report: dict, config: dict):
@@ -114,6 +113,7 @@ class Command(BaseCommand):
             self_control_task.status = 1
             self_control_task.save()
         except Server.DoesNotExist:
+            print(f"SERVER NOT FOUND {platform.node()}")
             self_control_task = None
 
         for control in TaskControl.objects.order_by('control_group', 'code').all():
