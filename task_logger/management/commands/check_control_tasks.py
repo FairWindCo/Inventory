@@ -124,7 +124,7 @@ class Command(BaseCommand):
                 delta = now() - control.last_message
                 need_notify = delta.total_seconds() > 12 * 60 * 60
             if control.control_group is not None:
-                need_notify = control.control_group.send_message
+                need_notify = need_notify and control.control_group.send_message
             if need_notify:
                 group_name = str(control.control_group)
                 if group_name not in report:
