@@ -40,11 +40,11 @@ class ControlTaskReportAdmin(admin.ModelAdmin):
     list_filter = ('host__name', 'code')
     readonly_fields = ('last_execute', 'last_control', 'last_message', 'message', 'status')
 
-    @display(description='Сервер')
+    @display(description='Сервер', ordering='host__name')
     def show_name(self, obj):
         return obj.host.name
 
-    @display(description='Код задачі')
+    @display(description='Код задачі', ordering="code")
     def show_code(self, obj):
         try:
             task_info = ServerScheduledTask.objects.get(code=obj.code)
@@ -52,6 +52,6 @@ class ControlTaskReportAdmin(admin.ModelAdmin):
         except ServerScheduledTask.DoesNotExist:
             return obj.code
 
-    @display(description='Група завдань')
+    @display(description='Група завдань', ordering='control_group__name')
     def show_group(self, obj):
         return obj.control_group.name if obj.control_group else '-'
