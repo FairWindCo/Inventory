@@ -1,5 +1,6 @@
 import platform
 import smtplib
+
 from django.core.management import BaseCommand
 from django.utils.timezone import now
 
@@ -130,54 +131,56 @@ class Command(BaseCommand):
             server_name = Server.objects.get(name=platform.node().upper())
             self_control_task, _ = TaskControl.objects.get_or_create(code=1, host=server_name)
             self_control_task.last_execute = now()
-            self_control_task.status = 1
+            self_control_task.status = 0
             self_control_task.save()
         except Server.DoesNotExist:
             print(f"SERVER NOT FOUND {platform.node()}")
             self_control_task = None
-
-        for control in TaskControl.objects.order_by('control_group', 'code').all():
-            if control.last_message is None:
-                need_notify = True
-            else:
-                delta = now() - control.last_message
-                need_notify = delta.total_seconds() > 12 * 60 * 60
-            if control.control_group is not None:
-                need_notify = need_notify and control.control_group.send_message
-            print(f'GROUP {control.control_group} LAST NOTIFY: {control.last_message} IS {need_notify}')
-            if need_notify:
-                group_name = str(control.control_group)
-                if group_name not in report:
-                    report[group_name] = []
-                if control.last_execute is None:
-                    state = None
+        try:
+            for control in TaskControl.objects.order_by('control_group', 'code').all():
+                if control.last_message is None:
+                    need_notify = True
                 else:
-                    delta = now() - control.last_execute
-                    shift = control.period * control.period_multiply
-                    state = delta.total_seconds() - shift
-
-                try:
-                    task_desc = ServerScheduledTask.objects.get(code=control.code)
-                    if task_desc.short_desc:
-                        task_name = f'{task_desc.name} ({task_desc.short_desc})'
+                    delta = now() - control.last_message
+                    need_notify = delta.total_seconds() > 12 * 60 * 60
+                if control.control_group is not None:
+                    need_notify = need_notify and control.control_group.send_message
+                print(f'GROUP {control.control_group} LAST NOTIFY: {control.last_message} IS {need_notify}')
+                if need_notify:
+                    group_name = str(control.control_group)
+                    if group_name not in report:
+                        report[group_name] = []
+                    if control.last_execute is None:
+                        state = None
                     else:
-                        task_name = f'{task_desc.name}'
-                except ServerScheduledTask.DoesNotExist:
-                    task_name = f'Код задачі: {control.code}'
+                        delta = now() - control.last_execute
+                        shift = control.period * control.period_multiply
+                        state = delta.total_seconds() - shift
 
-                report[group_name].append({
-                    'task_code_name': task_name,
-                    'server': control.host.name,
-                    'state': state,
-                    'message': control.message,
-                    'error_code': control.status,
-                })
-                control.last_message = now()
-                control.save()
-        print(report)
-        if report:
-            send_mail_mime(report, MAIL_SEND_REPORT)
-        if self_control_task:
-            self_control_task.last_execute = now()
-            self_control_task.status = 0
-            self_control_task.save()
+                    try:
+                        task_desc = ServerScheduledTask.objects.get(code=control.code)
+                        if task_desc.short_desc:
+                            task_name = f'{task_desc.name} ({task_desc.short_desc})'
+                        else:
+                            task_name = f'{task_desc.name}'
+                    except ServerScheduledTask.DoesNotExist:
+                        task_name = f'Код задачі: {control.code}'
+
+                    report[group_name].append({
+                        'task_code_name': task_name,
+                        'server': control.host.name,
+                        'state': state,
+                        'message': control.message,
+                        'error_code': control.status,
+                    })
+                    control.last_message = now()
+                    control.save()
+            print(report)
+            if report:
+                send_mail_mime(report, MAIL_SEND_REPORT)
+        except Exception as e:
+            if self_control_task:
+                self_control_task.last_execute = now()
+                self_control_task.status = 1
+                self_control_task.message = str(e)
+                self_control_task.save()
