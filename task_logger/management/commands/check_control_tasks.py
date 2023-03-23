@@ -142,7 +142,7 @@ class Command(BaseCommand):
                     need_notify = True
                 else:
                     delta = now() - control.last_message
-                    need_notify = delta.total_seconds() > 12 * 60 * 60
+                    need_notify = delta.total_seconds() >= 12 * 60 * 60
                 if control.control_group is not None:
                     need_notify = need_notify and control.control_group.send_message
                 print(f'GROUP {control.control_group} LAST NOTIFY: {control.last_message} IS {need_notify}')
