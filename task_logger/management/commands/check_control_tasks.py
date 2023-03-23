@@ -1,6 +1,5 @@
 import platform
 import smtplib
-
 from django.core.management import BaseCommand
 from django.utils.timezone import now
 
@@ -41,13 +40,18 @@ def get_text_html_part(report: dict):
         for task in reports:
             state = task['state']
             if state is None or state > 0:
-                not_run.append(f"Завдання {task['task_code_name']} на сервері {task['server']}")
+                not_run.append(f"Завдання {task['task_code_name']} на сервері {task['server']}. ")
             else:
                 if task['error_code']:
                     error_task.append(
                         f"Завдання {task['task_code_name']}  на сервері {task['server']} - завершена с ошибкой: {task['message']}")
                 else:
-                    ok_task.append(f"Завдання {task['task_code_name']}  на сервері {task['server']}")
+                    if task['message']:
+                        ok_task.append(
+                            f"Завдання {task['task_code_name']}  на сервері {task['server']} - вконано успішно: {task['message']}")
+                    else:
+                        ok_task.append(
+                            f"Завдання {task['task_code_name']}  на сервері {task['server']} - вконано успішно")
         plain_message.append('ВИКОНАНІ УСПІШНО:')
         html_tasks.append('<h3>ВИКОНАНІ УСПІШНО:</h3>')
         plain_message.extend(ok_task)
@@ -55,16 +59,16 @@ def get_text_html_part(report: dict):
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', ok_task))
         html_tasks.append("</ul>")
         plain_message.append('ВИКОНАНІ З ПОМИЛКАМИ:')
-        html_tasks.append('<h3>ВИКОНАНІ З ПОМИЛКАМИ:</h3>')
+        html_tasks.append('<h3 class="alarm">ВИКОНАНІ З ПОМИЛКАМИ:</h3>')
         plain_message.extend(error_task)
         html_tasks.append("<ul>")
-        html_tasks.extend(map(lambda a: f'<li style:"color:red;">{a}</li>', error_task))
+        html_tasks.extend(map(lambda a: f'<li class="alarm">{a}</li>', error_task))
         html_tasks.append("</ul>")
         plain_message.append('НЕ ВИКОНАНІ:')
-        html_tasks.append('<h3>НЕ ВИКОНАНІ:</h3>')
+        html_tasks.append('<h3 class="warning">НЕ ВИКОНАНІ:</h3>')
         plain_message.extend(not_run)
         html_tasks.append("<ul>")
-        html_tasks.extend(map(lambda a: f'<li>{a}</li>', not_run))
+        html_tasks.extend(map(lambda a: f'<li class="warning">{a}</li>', not_run))
         html_tasks.append("</ul>")
     return html_tasks, plain_message
 
@@ -78,15 +82,31 @@ def format_message(report: dict, config: dict):
     part1 = MIMEText('\n'.join(plain_message), "plain")
     message = MIMEMultipart("alternative")
     message["Subject"] = "Звіт про автоматичні таски"
+
+    style_css = """\
+    li {
+        color: #07d207;
+    }
+    .alarm {
+        color:red;
+    }
+    .warning {
+        color:#d5c50b;
+    }
+    """
+
     html = """\
     <html>
+      <head>
+      <style>{}</style>
+      </head>
       <body>        
         <div>
         {}
         </div>
       </body>
     </html>
-    """.format(''.join(html_tasks))
+    """.format(style_css, ''.join(html_tasks))
 
     message["From"] = config.get('from_mail', '')
     message["To"] = config.get('to_mail', "bspd@erc.ua")
@@ -117,7 +137,6 @@ class Command(BaseCommand):
             self_control_task = None
 
         for control in TaskControl.objects.order_by('control_group', 'code').all():
-            need_notify = False
             if control.last_message is None:
                 need_notify = True
             else:
@@ -160,5 +179,5 @@ class Command(BaseCommand):
             send_mail_mime(report, MAIL_SEND_REPORT)
         if self_control_task:
             self_control_task.last_execute = now()
-            self_control_task.status=0
+            self_control_task.status = 0
             self_control_task.save()
