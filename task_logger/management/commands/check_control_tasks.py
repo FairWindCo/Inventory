@@ -35,8 +35,8 @@ def get_text_html_part(report: dict):
         ok_task = []
         error_task = []
         not_run = []
-        plain_message.append(f"Група завдань: {group}")
-        html_tasks.append(f'<h2>Група завдань: {group}</h2>')
+        plain_message.append(f"Група завдань: {group if group else '---'}")
+        html_tasks.append(f"<h2>Група завдань: {group if group else '---'}</h2>")
 
         for task in reports:
             state = task['state']
@@ -60,13 +60,13 @@ def get_text_html_part(report: dict):
         html_tasks.extend(map(lambda a: f'<li>{a}</li>', ok_task))
         html_tasks.append("</ul>")
         plain_message.append('ВИКОНАНІ З ПОМИЛКАМИ:')
-        html_tasks.append('<h3 class="alarm">ВИКОНАНІ З ПОМИЛКАМИ:</h3>')
+        html_tasks.append('<h3>ВИКОНАНІ З ПОМИЛКАМИ:</h3>')
         plain_message.extend(error_task)
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li class="alarm">{a}</li>', error_task))
         html_tasks.append("</ul>")
         plain_message.append('НЕ ВИКОНАНІ:')
-        html_tasks.append('<h3 class="warning">НЕ ВИКОНАНІ:</h3>')
+        html_tasks.append('<h3>НЕ ВИКОНАНІ:</h3>')
         plain_message.extend(not_run)
         html_tasks.append("<ul>")
         html_tasks.extend(map(lambda a: f'<li class="warning">{a}</li>', not_run))
