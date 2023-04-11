@@ -17,13 +17,13 @@ from django.contrib import admin
 from django.template.defaulttags import url
 from django.urls import path, include, re_path
 
-from task_logger.views import process_message, get_token, process_host_info_json
+from task_logger.views import view_process_message, view_get_csrf_token, process_host_info_json
 
 admin.site.site_header = 'Inventory Portal'
 urlpatterns = [
     path('baton/', include('baton.urls')),
-    path('special', process_message),
-    path('token', get_token),
+    path('special', view_process_message),
+    path('token', view_get_csrf_token),
     path('host_info_update', process_host_info_json),
     path('', admin.site.urls),
     re_path(r'^_nested_admin/', include('nested_admin.urls')),

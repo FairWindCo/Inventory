@@ -32,3 +32,20 @@ body {
     flex-grow: 2;
     flex-basis: 100px;
 }
+
+.form-row div>input{
+    flex-basis: 85%;
+}
+
+.form-row div>input[type=checkbox]{
+    flex-basis: auto;
+}
+
+.change-form #content form .form-row .datetime {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    /* flex-wrap: wrap; */
+    margin: 0;
+    flex-basis: 85%;
+}

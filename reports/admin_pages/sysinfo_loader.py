@@ -30,8 +30,8 @@ class JsonInfoReport(CustomModelPage):
                 json_data = file.read()
                 if json_data:
                     print(json_data)
-                    from task_logger.views import process_json_info
-                    report = process_json_info(json.loads(json_data))
+                    from task_logger.views import process_host_system_info_json
+                    report = process_host_system_info_json(json.loads(json_data))
                     self.bound_admin.message_success(self.bound_request, report.content.decode())
                 else:
                     self.bound_admin.message_error(self.bound_request, "Немає данних")

@@ -25,7 +25,8 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     list_display = ('room', 'domain', 'show_url_with_description', 'show_ips',
                     'virtual_server_name', 'os_name', 'os_version', 'status', 'os_last_update')
     readonly_fields = ('show_url_with_description',
-        'show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_tasks', 'show_daemons')
+                       'show_configuration', 'show_application', 'show_soft', 'show_roles', 'show_tasks',
+                       'show_daemons')
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
@@ -86,6 +87,7 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     @display(description='IP')
     def show_ips(self, obj):
         return mark_safe('<BR>'.join(str(ip) for ip in obj.ip_addresses.all()))
+
     @display(description='Ім\'я сервера')
     def show_url_with_description(self, obj):
         opts = obj._meta
@@ -99,6 +101,7 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
                              f"<span class='tooltiptext tooltiplong'>{obj.description}</span></a>")
         else:
             return mark_safe(f"<a href='{obj_url}'>{obj.name}</a>")
+
     @display(description='Конфігурація')
     def show_configuration(self, obj):
         infos = []
@@ -147,6 +150,17 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
 
     @display(description='Заплановані завдання')
     def show_tasks(self, obj):
+        title = '<tr><td>Завдання</td><td>Команда</td><td>Час</td></tr>'
+        infos = [f'<tr><td><a href="{ServerInfoViewAdmin.get_change_url(app)}">' \
+                 f'{app.task.name}</a></td><td>{app.task.execute_path}</td><td>{app.form_html_schedule_type()}</td></tr>'
+                 for app in obj.host_task.filter(task__silent=False, is_removed=False).
+                 order_by('task__name').
+                 all()]
+        # print(infos)
+        return mark_safe('<table>' + title + ''.join(infos) + '</table>')
+
+    @display(description='Заплановані завдання')
+    def show_only_tasks(self, obj):
         infos = [f'<a href="{ServerInfoViewAdmin.get_change_url(app)}">{app.name} [{app.execute_path}]</a>'
                  for app in obj.scheduled_tasks.
                  filter(silent=False).

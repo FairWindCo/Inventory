@@ -1,6 +1,7 @@
 from django.db import models
 
 from dictionary.models import ServerResponse, SoftwareCatalog, ServerRole, ServerScheduledTask
+from django_helpers.admin.formating import format_popup
 
 
 class ResponsiblePerson(models.Model):
@@ -36,7 +37,6 @@ class Application(models.Model):
     form_help_text = 'Редагування інформації про сервіси, що надаються клієнтам'
     tooltip = 'Редагування описів сервісів, які надаються клієнтам'
 
-
     def __str__(self):
         return f'{self.name}'
 
@@ -56,6 +56,7 @@ class ApplicationServersSpecification(models.Model):
     response_person = models.ForeignKey(ResponsiblePerson, on_delete=models.CASCADE,
                                         verbose_name='Відповідальний співробітник', blank=True,
                                         null=True)
+
     def __str__(self):
         return f'{self.application_server.application}'
 
@@ -75,7 +76,6 @@ class ApplicationServers(models.Model):
     help_text = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
     form_help_text = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
     tooltip = 'Редагування зв\'язку між сервісами та серверами, що задіяни для забезпечення їх роботи'
-
 
     def __str__(self):
         return f'{self.server.name} - {self.application.name}'
@@ -99,10 +99,8 @@ class HostInstalledSoftware(models.Model):
     form_help_text = 'Редагування однієї конкретної позиції, що на якому сервері встановлено'
     tooltip = 'Редактор ПО встановлено на сервері'
 
-
     def __str__(self):
         return f'{self.server.name} {self.soft.name} {self.version}'
-
 
     class Meta:
         unique_together = (('soft', 'server'),)
@@ -116,8 +114,7 @@ class HostScheduledTask(models.Model):
     server = models.ForeignKey("Server", on_delete=models.CASCADE, verbose_name='Сервер', related_name='host_task')
     run_user = models.CharField(max_length=50, verbose_name='Користувач', blank=True, null=True)
     author = models.CharField(max_length=50, verbose_name='Автор', blank=True, null=True)
-    schedule_type = models.CharField(max_length=150, verbose_name='Тип Повторення', blank=True, null=True)
-    schedule = models.CharField(max_length=150, verbose_name='Повторення', blank=True, null=True)
+
     installation_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата встановлення')
     last_run = models.DateTimeField(blank=True, null=True, verbose_name='Дата останього запуску')
     next_run = models.DateTimeField(blank=True, null=True, verbose_name='Дата наступного запуску')
@@ -126,10 +123,56 @@ class HostScheduledTask(models.Model):
     last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата перевірики')
     is_removed = models.BooleanField(default=False, verbose_name='Задачу видалено')
 
+    schedule_type = models.CharField(max_length=10240, verbose_name='Планування', blank=True, null=True, default=None)
+    comments = models.TextField(verbose_name='Примітки', blank=True, null=True, default=None)
+
     help_text = 'Редагування переліку автоматичних завдань, що працюють на серверах'
     form_help_text = 'Редагування інформації про один конкретний таск на конкретному сервері'
     tooltip = 'Редактор переліку автоматичних завдань на серверах'
 
+    def form_task_name(self):
+        name = self.task.name
+        path = self.task.execute_path
+        if self.task.description:
+            path = f'{path}<p>{self.task.description}</p>'
+        return format_popup(name, path)
+
+    def form_html_schedule_type(self):
+        list_schedule_type = self.schedule_type.split(';')
+
+        def form_row(row):
+            if row.startswith('EVENT'):
+                row = format_popup('ПОДІЯ', row[6:])
+            elif row.startswith('SESSION_STATE_CHANGE'):
+                row = format_popup('ЗМІНА СЕСІЇ', row[34:])
+            elif row.startswith('BOOT'):
+                row = format_popup(row[:5], row[5:])
+            elif row.startswith('CUSTOM_TRIGGER'):
+                row = format_popup('ОСОБЛИВИЙ', row[16:-1])
+            elif row.startswith('REGISTRATION'):
+                row = format_popup('РЕЄСРТАЦІЯ', row[13:])
+            elif row.startswith('LOGON'):
+                row = format_popup('ЛОГІН', row[6:])
+            elif row.startswith('BOOT'):
+                row = format_popup('BOOT', row[5:])
+            elif row.startswith('IDLE'):
+                row = format_popup('IDLE', row[5:])
+            elif row.startswith('MONTHLY'):
+                row = format_popup('МІСЯЦЬ', row[8:])
+            elif row.startswith('MONTHLYDOW'):
+                row = format_popup('ТИЖНІ МІСЯЦЯ', row[11:])
+            elif row.startswith('WEEKLY'):
+                row = format_popup('ДНІ ТИЖНЯ', row[7:])
+            elif row.startswith('DAILY'):
+                row = format_popup('ДНІ', row[6:])
+            elif row.startswith('TIME'):
+                row = format_popup('ЧАС', row[5:])
+
+
+            return f'<li>{row}</li>'
+
+        list_html = ''.join(map(form_row, list_schedule_type))
+        return f'<ul>{list_html}</ul>'
 
     def __str__(self):
         return f'{self.server.name} {self.task.name} {self.installation_date}'

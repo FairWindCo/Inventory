@@ -1,8 +1,11 @@
+import datetime
+
 from django.contrib import admin
 from django.contrib.admin import display
 from django.utils.safestring import mark_safe
 
 from dictionary.models import ServerFuture, ServerService
+from django_helpers.admin.defaut_filter_value_mixin import DefaultFilterMixin
 from info.models.applications import HostScheduledTask
 
 
@@ -51,30 +54,53 @@ class SoftFutureAdmin(admin.ModelAdmin):
         return False
 
 
-class ServerTaskAdmin(admin.ModelAdmin):
+class ServerTaskAdmin(DefaultFilterMixin, admin.ModelAdmin):
     search_fields = ('task__name', 'server__name')
-    list_display = ('display_server', 'display_task',
-                    'last_run', 'next_run', 'exit_code')
-    readonly_fields = ('display_server', 'display_task')
-    list_filter = ('server__name', 'task__name')
+    list_display = ('display_server', 'display_task', 'display_scheduller',
+                    'display_execution', 'exit_code', 'comments')
+    readonly_fields = ('display_server', 'display_task', 'server', 'task',
+                       'last_run', 'next_run', 'exit_code', 'is_removed',
+                       'run_user', 'author', 'schedule_type', 'installation_date',
+                       'last_check_date', 'status')
+    list_filter = ('server__name', 'task__name', 'is_removed', 'task__silent')
+    default_filters = (
+        ('is_removed__exact', 0),
+        ('task__silent__exact', 0),
+    )
 
     def get_queryset(self, request):
         print("test")
-        return super().get_queryset(request).filter(task__silent=False)
+        return super().get_queryset(request)
 
-    @display(description='Сервер')
+    @display(description='Планування')
+    def display_scheduller(self, obj):
+        if obj.schedule_type:
+            return mark_safe(obj.form_html_schedule_type())
+        return obj.schedule_type
+
+
+    @display(description='Останній \ Наступний запуск ')
+    def display_execution(self, obj):
+
+        run =obj.last_run.strftime("%d-%m-%Y %H:%M:%S") if obj.last_run else '-'
+        next = obj.next_run.strftime("%d-%m-%Y %H:%M:%S") if obj.next_run else '-'
+        return mark_safe(f'{run}<BR>{next}')
+
+
+
+    @display(description='Сервер', ordering='server__name')
     def display_server(self, obj):
         return obj.server.name
 
-    @display(description='Задача')
+    @display(description='Назва задачі', ordering='task__name')
     def display_task(self, obj):
-        return obj.task.name
+        return mark_safe(obj.form_task_name())
 
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
+        return True
 
     def has_delete_permission(self, request, obj=None):
         return False

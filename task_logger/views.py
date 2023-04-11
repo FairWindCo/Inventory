@@ -53,14 +53,15 @@ def load_key(key_path='private.pem'):
         return PrivateKey.load_pkcs1(key_path)
 
 
-def test_request_body(body_text, key=None, key_field_name='key',
-                      control_value_field='host',
-                      time_format='%d%m%y%H%M%S',
-                      timedelta=600):
+def test_request_body_sign(body_text, key=None, key_field_name='key',
+                           control_value_field='host',
+                           time_format='%d%m%y%H%M%S',
+                           timedelta=600):
     if body_text:
         key = load_key(key)
         if key:
-            data = json.loads(unquote(body_text))
+            request_text = unquote(body_text)
+            data = json.loads(request_text)
             enc_key = data.get(key_field_name, None)
             control_field = data.get(control_value_field, None)
             if enc_key and control_field:
@@ -90,7 +91,7 @@ def test_request_body(body_text, key=None, key_field_name='key',
         print("EMPTY RESPONSE")
 
 
-def process_json_report(json_data):
+def process_json_server_message_report(json_data):
     try:
         if json_data:
             server_name = json_data.get('host', None)
@@ -137,12 +138,12 @@ def process_json_report(json_data):
 
 
 @csrf_exempt
-def process_message(request):
+def view_process_message(request):
     if request.method == 'POST':
         try:
             body_text = request.body
-            json_data = test_request_body(body_text.decode())
-            return process_json_report(json_data)
+            json_data = test_request_body_sign(body_text.decode())
+            return process_json_server_message_report(json_data)
         except BaseException as e:
             print(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -154,11 +155,13 @@ def process_message(request):
         return HttpResponseForbidden('Incorrect requests type')
 
 
-def get_token(request):
+def view_get_csrf_token(request):
     from django.conf import settings
     return JsonResponse({
         'csrf': csrf.get_token(request),
-        'header_name': settings.CSRF_HEADER_NAME})
+        'header_name': settings.CSRF_HEADER_NAME,
+        'cookie_name': settings.CSRF_COOKIE_NAME,
+    })
 
 
 NOW = datetime.datetime.now()
@@ -176,6 +179,7 @@ def process_time(installed):
         '%d/%m/%Y',
         '%d.%m.%Y',
         '%Y%m%d%H%M%S.%f',
+        '%Y%m%d%H%M%S.%f%z',
         '%d.%m.%Y %H:%M:%S',
         '%d/%m/%Y %H:%M:%S',
         '%m/%d/%Y %H:%M:%S',
@@ -188,10 +192,15 @@ def process_time(installed):
         if installed == '01.01.0001 0:00:00':
             return None
         try:
-            return make_aware(timezone.datetime.strptime(installed, format_time), timezone.get_current_timezone())
+            tzm = timezone.datetime.strptime(installed, format_time)
+            if not tzm.tzname():
+                prdt = make_aware(tzm, timezone.get_current_timezone())
+                return prdt
+            return tzm
             # return datetime.datetime.strptime(installed, format_time).astimezone(LOCAL_TZ)
         except Exception as e:
             # print(e)
+            print(format_time, installed)
             pass
 
 
@@ -277,118 +286,113 @@ def remove_deleted_info(info_class, check_date, server, info_type, name_path='na
         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
 
 
-def process_tasks(server, task_info):
-    def check_system_task(name, task):
-        if 'author' in task and task['author']:
-            author_lower = task['author'].lower()
-            if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
-                return True
-        path = (task['new_path'] if 'new_path' in task else task['path']).lower()
-        if path.find('powershell.exe') >= 0:
-            return False
-        if path == 'com\d-com task':
+def check_system_task(name, path, task):
+    if 'author' in task and task['author']:
+        author_lower = task['author'].lower()
+        if author_lower.find('microsoft') >= 0 or author_lower.find('микрософт') >= 0:
             return True
-        if path == 'COM Handler Action':
-            return True
-        if path.startswith('%systemroot%'):
-            return True
-        if path.startswith('%windir%'):
-            return True
-        check_name = name.lower()
-        if check_name == 'user_feed_synchronization':
-            return True
-        if check_name.startswith('windows defender'):
-            return True
-        return False
+    if task.get('is_dcom', False):
+        return True
+    if path.startswith('%systemroot%'):
+        return True
+    if path.startswith('%windir%'):
+        return True
+    check_name = name.lower()
+    if check_name == 'user_feed_synchronization':
+        return True
+    if check_name.startswith('windows defender'):
+        return True
+    return False
 
+
+def process_task(task, server, check_date, installed_tasks):
+    name = task['name']
+    last_index = name.rfind('\\')
+    if last_index >= 0:
+        name = name[last_index + 1:]
+    name = converting_tasks_service_name(name)
+    path = task['main_path'].lower()
+    next_run = process_time(task['next_run'])
+    last_run = process_time(task['last_run'])
+
+    schedule_type = task['schedule_type'] if \
+        len(task['schedule_type']) < 10230 else task['schedule_type'][:10230] + '...'
+    if len(path) > 2048:
+        path = path[:2045] + '...'
+    try:
+        task_i = ServerScheduledTask.objects.get(name=name, execute_path=path)
+        task_i.execute_path = path
+        task_i.silent = check_system_task(name, path, task)
+        task_i.save()
+    except ServerScheduledTask.DoesNotExist:
+        print("Create Task", name)
+        task_i = ServerScheduledTask(name=name,
+                                     execute_path=path,
+                                     full_actions=task['full_actions'],
+                                     description=task['comment'])
+        task_i.silent = check_system_task(name, path, task)
+        task_i.save()
+
+    try:
+        host_info = HostScheduledTask.objects.get(task=task_i,
+                                                  server=server)
+        if host_info.is_removed:
+            log = ServerModificationLog(server=server,
+                                        log_type=ServerModificationLog.LogType.INSTALL,
+                                        topic=ServerModificationLog.LogTopic.TASK,
+                                        description=f're setup task {name}')
+            log.save()
+        elif host_info.exit_code != str(task['last_result']) or host_info.status != str(task['status']):
+            log = ServerModificationLog(server=server,
+                                        log_type=ServerModificationLog.LogType.UPDATE,
+                                        topic=ServerModificationLog.LogTopic.TASK,
+                                        description=f'task {name}  change status {task["status"]} or '
+                                                    f'exit code {task["last_result"]}')
+            log.save()
+        host_info.last_check_date = check_date
+        host_info.installation_date = process_time(task['start_time'])
+        host_info.next_run = next_run
+        host_info.last_run = last_run
+        host_info.run_user = task['runas']
+        host_info.author = task['author']
+        host_info.schedule_type = schedule_type
+        host_info.exit_code = task['last_result']
+        host_info.status = task['status']
+        host_info.is_removed = False
+
+    except HostScheduledTask.DoesNotExist:
+        if installed_tasks:
+            log = ServerModificationLog(server=server,
+                                        log_type=ServerModificationLog.LogType.INSTALL,
+                                        topic=ServerModificationLog.LogTopic.TASK,
+                                        description=f'new task {name}')
+            log.save()
+        host_info = HostScheduledTask(task=task_i,
+                                      server=server,
+                                      installation_date=process_time(task['start_time']),
+                                      next_run=next_run,
+                                      last_run=last_run,
+                                      run_user=task['runas'],
+                                      author=task['author'],
+                                      schedule_type=schedule_type,
+                                      exit_code=task['last_result'],
+                                      status=task['status'],
+                                      last_check_date=check_date,
+                                      )
+    host_info.save()
+
+
+def process_tasks(server, task_info):
     check_date = make_aware(datetime.datetime.now(), timezone.get_current_timezone())
     installed_tasks = HostScheduledTask.objects.filter(server=server).count() > 0
-    for task in task_info:
+    for one_task in task_info:
         try:
-            print(task)
-            if task['name'] is None or not task['name'] or task['task'] is None:
+            if one_task['name'] is None or not one_task['name'] or not one_task['main_path']:
                 continue
-            if not task['name']:
-                name = task['task']
-            else:
-                name = task['name']
-                last_index = name.rfind('\\')
-                if last_index >= 0:
-                    name = name[last_index + 1:]
-            name = converting_tasks_service_name(name)
-            path = task['new_path'] if len(task['new_path']) < 255 else task['task']
-            try:
-                task_i = ServerScheduledTask.objects.get(name=name, execute_path=path)
-                task_i.execute_path = path
-                if len(task['new_path']) > 255:
-                    task_i.description += task['new_path']
-                task_i.silent = check_system_task(name, task)
-                task_i.save()
-            except ServerScheduledTask.DoesNotExist:
-                print("Create Task", name)
-                task_i = ServerScheduledTask(name=name, execute_path=path,
-                                             description=f"{task['comment']} {task['new_path'] if len(task['new_path']) else ''}")
-                task_i.silent = check_system_task(name, task)
-                task_i.save()
-
-            try:
-                host_info = HostScheduledTask.objects.get(task=task_i,
-                                                          server=server)
-                if host_info.is_removed:
-                    log = ServerModificationLog(server=server,
-                                                log_type=ServerModificationLog.LogType.INSTALL,
-                                                topic=ServerModificationLog.LogTopic.TASK,
-                                                description=f're setup task {name}')
-                    log.save()
-                elif host_info.exit_code != str(task['last_result']) or host_info.status != str(task['status']):
-                    log = ServerModificationLog(server=server,
-                                                log_type=ServerModificationLog.LogType.UPDATE,
-                                                topic=ServerModificationLog.LogTopic.TASK,
-                                                description=f'task {name}  change status {task["status"]} or '
-                                                            f'exit code {task["last_result"]}')
-                    log.save()
-                host_info.last_check_date = check_date
-                host_info.installation_date = process_time(task['start_time'])
-                host_info.next_run = process_time(task['next_run'])
-                host_info.last_run = process_time(task['last_run'])
-                host_info.run_user = task['runas']
-                host_info.author = task['author']
-                host_info.schedule_type = task['schedule_type'] if \
-                    len(task['schedule_type']) < 255 else task['schedule_type'][:250] + '...'
-                host_info.exit_code = task['last_result']
-                host_info.status = task['status']
-                host_info.schedule = task['schedule']
-                host_info.is_removed = False
-            except HostScheduledTask.DoesNotExist:
-                if installed_tasks:
-                    log = ServerModificationLog(server=server,
-                                                log_type=ServerModificationLog.LogType.INSTALL,
-                                                topic=ServerModificationLog.LogTopic.TASK,
-                                                description=f'new task {name}')
-                    log.save()
-                host_info = HostScheduledTask(task=task_i,
-                                              server=server,
-                                              installation_date=process_time(task['start_time']),
-                                              next_run=process_time(task['next_run']),
-                                              last_run=process_time(task['last_run']),
-                                              run_user=task['runas'],
-                                              author=task['author'],
-                                              schedule_type=task['schedule_type'],
-                                              exit_code=task['last_result'],
-                                              status=task['status'],
-                                              schedule=task['schedule'],
-                                              last_check_date=check_date,
-                                              )
-            host_info.save()
-        except Exception as e:
-            print(e, task)
-    # for host_task in HostScheduledTask.objects.filter(server=server).filter(
-    #         Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).all():
-    #     log = ServerModificationLog(server=server, description=f'delete task {host_task.name}')
-    #     log.save()
-    #
-    # HostScheduledTask.objects.filter(server=server).filter(
-    #     Q(last_check_date__lt=check_date) | Q(last_check_date__isnull=True)).update(is_removed=True)
+            process_task(one_task, server, check_date, installed_tasks)
+        except Exception as ex:
+            print(traceback.format_exc())
+            print(ex, one_task)
     remove_deleted_info(HostScheduledTask, check_date, server, 'task', 'task.name', ServerModificationLog.LogTopic.TASK)
 
 
@@ -476,7 +480,7 @@ def process_daemons(server, daemons):
         server.daemons.add(fut)
 
 
-def process_json_info(json_data):
+def process_host_system_info_json(json_data):
     try:
         if json_data:
             host = json_data['host'].upper()
@@ -545,6 +549,7 @@ def process_json_info(json_data):
             return JsonResponse({'result': 'ok'})
         return JsonResponse({'result': 'error', 'message': f"EMPTY JSON REPORT {json_data}"})
     except Exception as e:
+        print(traceback.format_exc())
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
@@ -556,12 +561,13 @@ def process_host_info_json(request):
     try:
         if request.method == 'POST':
             body_text = request.body
-            json_data = test_request_body(body_text.decode())
+            json_data = test_request_body_sign(body_text.decode())
             if json_data:
-                return process_json_info(json_data)
+                return process_host_system_info_json(json_data)
         return HttpResponseForbidden()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(traceback.format_exc())
         print(exc_type, fname, exc_tb.tb_lineno)
         return JsonResponse({'result': 'error', 'message': str(e), 'file': fname, 'line': exc_tb.tb_lineno})
