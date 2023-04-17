@@ -123,7 +123,7 @@ class HostScheduledTask(models.Model):
     last_check_date = models.DateTimeField(blank=True, null=True, verbose_name='Дата перевірики')
     is_removed = models.BooleanField(default=False, verbose_name='Задачу видалено')
 
-    schedule_type = models.CharField(max_length=1024*6, verbose_name='Планування', blank=True, null=True, default=None)
+    schedule_type = models.CharField(max_length=1024*3, verbose_name='Планування', blank=True, null=True, default=None)
     comments = models.TextField(verbose_name='Примітки', blank=True, null=True, default=None)
 
     help_text = 'Редагування переліку автоматичних завдань, що працюють на серверах'
