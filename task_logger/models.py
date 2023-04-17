@@ -13,7 +13,7 @@ class ServerTaskReport(models.Model):
     code = models.CharField(max_length=50, verbose_name='Код задачі для контролю', blank=True, null=True, default=None)
     help_text = 'Журнал зі звітами від автоматичних тасків (скриптів), що працюють на серверах'
     form_help_text = 'Один записк про таск або скрипт, що відпрацював'
-    tooltip = 'Журнал проботи автоматичних тасків та скриптів по серверам'
+    tooltip = 'Журнал роботи автоматичних тасків та скриптів по серверам'
 
     class Meta:
         verbose_name = 'Журнал автоматичних тасків'
