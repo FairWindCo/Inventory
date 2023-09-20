@@ -23,6 +23,9 @@ class HardwareInfoViewAdmin(ChangeTitleAdminModel):
     list_display = (
         'show_url_with_description', 'show_room', 'show_ips', 'show_config_desc', 'num_cpu', 'num_virtual', 'ram'
     )
+    search_fields = (
+    'server__name', 'server__ip_addresses__ip_address', 'server__virtual_server_name', 'platform_name', 'cpu_type')
+    list_filter = ('server__room', 'server__domain', 'server__os_name__name',)
 
     #    list_display = ('server__room',
     # 'domain', 'show_url_with_description', 'show_ips',
@@ -64,3 +67,12 @@ class HardwareInfoViewAdmin(ChangeTitleAdminModel):
     @display(description='IP')
     def show_ips(self, obj):
         return mark_safe('<BR>'.join(str(ip) for ip in obj.server.ip_addresses.all()))
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
