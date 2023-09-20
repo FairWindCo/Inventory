@@ -496,11 +496,14 @@ def process_host_system_info_json(json_data):
                 build = json_data.get('BuildNumber', None)
                 if version_os:
                     version_os = version_os + '.' + build if build else version_os
-                if server.os_version is None or server.os_version != version_os and not server.os_version.startswith('!'):
-                    server.os_version = version_os
+                #if server.os_version is None or server.os_version != version_os and not server.os_version.startswith('!'):
+                server.os_version = version_os
             install_time = json_data.get('InstallDate', None)
             if server.os_installed is None and install_time:
                 server.os_installed = process_time(install_time[:-4])
+            update_search = json_data.get('LastUpdateCheck', None)
+            if update_search:
+                server.os_update_search = process_time(update_search)
             # print(json_data['sysname'])
             sys_name = json_data.get('sysname', None)
             if sys_name:
