@@ -492,12 +492,12 @@ def process_host_system_info_json(json_data):
                 server.room = ServerRoom.objects.first()
                 networks = IP.objects.filter(mask__lt=32).all()
                 server.updated_by = User.objects.first()
-            if server.os_version is None:
                 version_os = json_data.get('Version', None)
                 build = json_data.get('BuildNumber', None)
                 if version_os:
                     version_os = version_os + '.' + build if build else version_os
-                server.os_version = version_os
+                if server.os_version is None or server.os_version != version_os and not server.os_version.startswith('!'):
+                    server.os_version = version_os
             install_time = json_data.get('InstallDate', None)
             if server.os_installed is None and install_time:
                 server.os_installed = process_time(install_time[:-4])

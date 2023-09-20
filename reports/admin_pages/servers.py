@@ -10,8 +10,8 @@ from reports.admin_pages.multi_lookup import StatusListFilter
 
 class ServerInfoAdminProxy(Server):
     help_text = 'Перелік інформації, про всі зареєстровані сервери ' \
-                '(при виборі окремого стерверу відкривається додаткова інформація)'
-    form_help_text = 'Інформація про один конкретний сервер'
+                '(при виборі окремого серверу відкривається додаткова інформація)'
+    form_help_text = 'Інформація про один вибраний сервер'
     tooltip = 'Загальна інформація про сервер'
 
     class Meta:

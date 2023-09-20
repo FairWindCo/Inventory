@@ -49,3 +49,7 @@ body {
     margin: 0;
     flex-basis: 85%;
 }
+
+table#result_list {
+    overflow-y: clip;
+}

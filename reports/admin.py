@@ -10,6 +10,7 @@ from reports.admin_pages.applications import AppInfoAdminProxy, ApplicationServe
     ApplicationInfoAdmin
 from reports.admin_pages.futures_service import FutureAdminProxy, SoftFutureAdmin, DaemonsAdminProxy, DaemonsAdmin, \
     ServerTaskAdminProxy, ServerTaskAdmin
+from reports.admin_pages.hardware_report import ServerHardwareInfoAdminProxy, HardwareInfoViewAdmin
 from reports.admin_pages.ip_adress import IPProxy, IPNetworkReport
 from reports.admin_pages.server_response import SpecificationProxy, ResponseInfoAdmin
 from reports.admin_pages.servers import ServerInfoAdminProxy, ServerInfoViewAdmin
@@ -22,6 +23,7 @@ from sysinfo.admin import ViewsModelAdmin, CustomViewsModelAdmin
 
 admin.site.register(ServerAdminProxy, ServerViewAdmin)
 admin.site.register(ServerInfoAdminProxy, ServerInfoViewAdmin)
+admin.site.register(ServerHardwareInfoAdminProxy, HardwareInfoViewAdmin)
 admin.site.register(AppInfoAdminProxy, ApplicationServerInfoAdmin)
 admin.site.register(AppInfoAProxy, ApplicationInfoAdmin)
 admin.site.register(SoftInfoAdminProxy, SoftInfoAdmin)
