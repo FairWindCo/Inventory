@@ -72,9 +72,9 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
                 famali_name = os.family if os.family else 'Інше'
                 famali_dict[famali_name] = famali_dict.get(famali_name, 0) + count_servers
                 if os.old:
-                    old_system_count += 1
+                    old_system_count += count_servers
                 else:
-                    system_count += 1
+                    system_count += count_servers
         if os_dict:
             config1 = {
                 'type': 'pie',
