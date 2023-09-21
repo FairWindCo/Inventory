@@ -12,6 +12,7 @@ from django_helpers.admin.change_title_admin import ChangeTitleAdminModel
 from django_helpers.admin.custom_admin_page import CustomizeAdmin
 from django_helpers.admin.custom_change_list import CustomAdminPagePrototype
 from django_helpers.dmqs.memory_model import CustomMemoryModel
+from info.models import Server
 # Register your models here.
 from reports.admin_pages.applications import AppInfoAdminProxy, ApplicationServerInfoAdmin, AppInfoAProxy, \
     ApplicationInfoAdmin
@@ -66,7 +67,7 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
         old_system_count = 0
         system_count = 0
         for os in OS.objects.all():
-            count_servers = os.server_set.count()
+            count_servers = os.server_set.exclude(status__in=[Server.ServerState.DELETED]).count()
             if count_servers > 0:
                 os_dict[os.name] = count_servers
                 famali_name = os.family if os.family else 'Інше'
