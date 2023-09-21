@@ -8,10 +8,11 @@ class SimpleNameAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     sortable_by = ('name',)
 
+
 class OSNameAdmin(admin.ModelAdmin):
     search_fields = ('name', 'family')
-    sortable_by = ('name', 'family')
-    list_display = ('name', 'family')
+    sortable_by = ('name', 'family', 'old')
+    list_display = ('name', 'family', 'old')
 
 
 class IPAdmin(admin.ModelAdmin):
@@ -23,11 +24,11 @@ class SoftwareCatalogAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     sortable_by = ('name',)
 
+
 class TaskCatalogAdmin(admin.ModelAdmin):
     list_display = ('name', 'execute_path')
     search_fields = ('name',)
     sortable_by = ('name',)
-
 
 
 class RoomAdmin(admin.ModelAdmin):

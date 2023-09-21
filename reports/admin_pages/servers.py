@@ -30,7 +30,8 @@ class ServerInfoViewAdmin(ChangeTitleAdminModel):
     exclude = ('futures', 'daemons')
     autocomplete_fields = ('os_name',)
     search_fields = ('name', 'ip_addresses__ip_address', 'virtual_server_name')
-    list_filter = (StatusListFilter, 'external', 'room', 'domain', 'os_name__name', 'os_name__family', 'applications__name',)
+    list_filter = (StatusListFilter, 'external', 'room', 'domain', 'os_name__name',
+                   'os_name__old', 'os_name__family', 'applications__name',)
 
     fieldsets = (
         ('Загальне', {
