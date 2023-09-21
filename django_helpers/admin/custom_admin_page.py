@@ -103,7 +103,7 @@ class CustomizeAdmin(SelfRegisterAdmin):
             extra_context = {}
         rendered_view = self.render_view_to_str(self.custom_list_view, request, **extra_context)
         result_url = self.result_chane_url
-        return self.custom_view_response(request, rendered_view, result_url, self.form_template, extra_context)
+        return self.custom_view_response(request, rendered_view, result_url, self.list_template, extra_context)
 
     # overwrite changeform_view for add custom_change_view customizer
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
