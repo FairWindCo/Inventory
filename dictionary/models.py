@@ -41,6 +41,7 @@ class ServerRoom(models.Model):
 
 class OS(models.Model):
     name = models.CharField(max_length=100, verbose_name='Назва ОС', unique=True)
+    family = models.CharField(max_length=50, verbose_name='Сімейство ОС', default=None, blank=True, null=True)
     help_text = 'Цей довідник використовується для заповнення інформацію про сімейство ОС сервера ' \
                 '(довідник потріден, так як одне й те саме значення може бути на більше ніж одному сервері)'
     form_help_text = 'Назва операційної системи, що буде використана при заповнені інформації про сервер'

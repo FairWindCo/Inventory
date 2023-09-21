@@ -25,7 +25,7 @@ class HardwareInfoViewAdmin(ChangeTitleAdminModel):
     )
     search_fields = (
     'server__name', 'server__ip_addresses__ip_address', 'server__virtual_server_name', 'platform_name', 'cpu_type')
-    list_filter = ('server__room', 'server__domain', 'server__os_name__name',)
+    list_filter = ('server__room', 'server__domain', 'server__os_name__name', 'server__os_name__family',)
 
     #    list_display = ('server__room',
     # 'domain', 'show_url_with_description', 'show_ips',

@@ -8,6 +8,11 @@ class SimpleNameAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     sortable_by = ('name',)
 
+class OSNameAdmin(admin.ModelAdmin):
+    search_fields = ('name', 'family')
+    sortable_by = ('name', 'family')
+    list_display = ('name', 'family')
+
 
 class IPAdmin(admin.ModelAdmin):
     search_fields = ('ip_address',)
@@ -33,7 +38,7 @@ class RoomAdmin(admin.ModelAdmin):
 
 admin.site.register(SoftwareCatalog, SoftwareCatalogAdmin)
 admin.site.register(IP, IPAdmin)
-admin.site.register(OS, SimpleNameAdmin)
+admin.site.register(OS, OSNameAdmin)
 admin.site.register(Domain, SimpleNameAdmin)
 admin.site.register(ServerRoom, RoomAdmin)
 admin.site.register(ServerRole, SimpleNameAdmin)
