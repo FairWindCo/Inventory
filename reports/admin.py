@@ -84,15 +84,41 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
                     'datasets': [{
                         'label': 'Операційних систем',
                         # 'data': [{'label': key, 'value': value} for key, value in os_dict.items()]
-                        'data': list(os_dict.values())
+                        'data': list(os_dict.values()),
+                        'backgroundColor': [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 205, 86)',
+                            'rgb(153, 204, 255)',
+                            'rgb(255, 153, 204)',
+                            'rgb(204, 153, 153)',
+                            'rgb(51, 204, 204)',
+                            'rgb(153, 204, 0)',
+                            'rgb(255, 102, 0)',
+                            'rgb(102, 102, 153)',
+                            'rgb(150, 150, 150)',
+                            'rgb(0, 51, 102)',
+                            'rgb(51, 153, 102)',
+                            'rgb(0, 0, 128)',
+                            'rgb(204, 204, 255)',
+                            'rgb(0, 102, 204)',
+                            'rgb(0, 128, 0)',
+                            'rgb(255, 99, 132)',
+                            'rgb(0, 0, 128)',
+                            'rgb(102, 0, 102)',
+                            'rgb(255, 205, 86)',
+                            'rgb(255, 255, 204)',
+                            'rgb(128, 128, 128)',
+                            'rgb(192, 192, 192)',
+                        ],
                     }]
                 },
                 'options': {
                     'responsive': True,
                     'plugins': {
                         'legend': {
-                            'display': False,
-                            'position': 'top',
+                            'display': True,
+                            'position': 'bottom',
                         },
                         'title': {
                             'display': True,
@@ -111,15 +137,41 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
                     'datasets': [{
                         'label': 'Операційних систем',
                         # 'data': [{'label': key, 'value': value} for key, value in os_dict.items()]
-                        'data': list(famali_dict.values())
+                        'data': list(famali_dict.values()),
+                        'backgroundColor': [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 205, 86)',
+                            'rgb(153, 204, 255)',
+                            'rgb(255, 153, 204)',
+                            'rgb(204, 153, 153)',
+                            'rgb(51, 204, 204)',
+                            'rgb(153, 204, 0)',
+                            'rgb(255, 102, 0)',
+                            'rgb(102, 102, 153)',
+                            'rgb(150, 150, 150)',
+                            'rgb(0, 51, 102)',
+                            'rgb(51, 153, 102)',
+                            'rgb(0, 0, 128)',
+                            'rgb(204, 204, 255)',
+                            'rgb(0, 102, 204)',
+                            'rgb(0, 128, 0)',
+                            'rgb(255, 99, 132)',
+                            'rgb(0, 0, 128)',
+                            'rgb(102, 0, 102)',
+                            'rgb(255, 205, 86)',
+                            'rgb(255, 255, 204)',
+                            'rgb(128, 128, 128)',
+                            'rgb(192, 192, 192)',
+                        ],
                     }]
                 },
                 'options': {
                     'responsive': True,
                     'plugins': {
                         'legend': {
-                            'display': False,
-                            'position': 'top',
+                            'display': True,
+                            'position': 'bottom',
                         },
                         'title': {
                             'display': True,
@@ -150,8 +202,8 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
                     'responsive': True,
                     'plugins': {
                         'legend': {
-                            'display': False,
-                            'position': 'top',
+                            'display': True,
+                            'position': 'bottom',
                         },
                         'title': {
                             'display': True,
@@ -164,10 +216,10 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
                 },
             }
             HTML = '''
-                <div style="display:flex;flex-direction: row;flex-wrap: wrap;">
-                    <div style="flex-grow: 1;width:600px;"><canvas id="chart1"></canvas></div>
-                    <div style="flex-grow: 1;width:600px;"><canvas id="chart2"></canvas></div>
-                    <div style="flex-grow: 1;width:600px;"><canvas id="chart3"></canvas></div>
+                <div style="display:flex;flex-direction: row;flex-wrap: wrap;justify-content: center; align-items: center;">
+                    <div style="flex-grow: 1;width:600px;max-height:900px;max-width:900px;"><canvas id="chart1"></canvas></div>
+                    <div style="flex-grow: 1;width:600px;max-height:900px;max-width:900px;"><canvas id="chart2"></canvas></div>
+                    <div style="flex-grow: 1;width:600px;max-height:900px;max-width:900px;"><canvas id="chart3"></canvas></div>
                 </div>
                 <script>
             const ctx1 = document.getElementById('chart1');
@@ -177,7 +229,7 @@ class OSStateReports(CustomizeAdmin, ChangeTitleAdminModel):
             new Chart(ctx2, %s);
             new Chart(ctx3, %s);
             </script>
-            ''' % (json.dumps(config1), json.dumps(config2), json.dumps(config3))
+            ''' % (json.dumps(config3), json.dumps(config2), json.dumps(config1))
         else:
             HTML = "Немає відповідних серверів"
         return mark_safe(HTML)
