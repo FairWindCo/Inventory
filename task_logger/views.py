@@ -209,9 +209,10 @@ def process_hotfix(server, hotfix_list):
         [(hotfix_id, process_time(date_install)) for hotfix_id, date_install in hotfix_list],
         key=lambda a: a[1].timestamp() if a[1] else 0
     )
-    hotfix_id, installed = sorted_hos_fix[-1]
-    server.last_update_id = hotfix_id
-    server.os_last_update = installed
+    if len(sorted_hos_fix)>0:
+        hotfix_id, installed = sorted_hos_fix[-1]
+        server.last_update_id = hotfix_id
+        server.os_last_update = installed
 
 
 def process_soft(server, soft_info):
@@ -325,14 +326,17 @@ def process_task(task, server, check_date, installed_tasks):
         task_i.silent = check_system_task(name, path, task)
         task_i.save()
     except ServerScheduledTask.DoesNotExist:
-        print("Create Task", name)
+        print("Create Task", name, path)
         task_i = ServerScheduledTask(name=name,
                                      execute_path=path,
                                      full_actions=task['full_actions'],
-                                     description=task['comment'])
+                                     description=task['comment']
+                                     )
         task_i.silent = check_system_task(name, path, task)
+        print(task_i.description,task_i.full_actions)
+        print(task_i.save())        
         task_i.save()
-
+        print("Task Created")
     try:
         host_info = HostScheduledTask.objects.get(task=task_i,
                                                   server=server)
@@ -518,7 +522,7 @@ def process_host_system_info_json(json_data):
             process_daemons(server, json_data.get('services', []))
             process_tasks(server, json_data.get('tasks', []))
             process_hotfix(server, json_data.get('hotfix', []))
-            if json_data['Manufacturer']:
+            if "Manufacturer" in json_data or "NumberOfProcessors" in json_data:
                 if server.hardware.first():
                     cpu = server.hardware.first()
                     may_have_disk = True

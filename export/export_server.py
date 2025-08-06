@@ -2,6 +2,7 @@ import json
 import sys
 from typing import Iterable
 
+from info.models import Server
 from remoting import run_commandline_args
 
 
@@ -103,6 +104,51 @@ def convert_server_to_json(server):
         # print(dict_obj)
         # json_str = json.dumps(dict_obj)
 
+        json_str = json.dumps(response)
+        # print(json_str)
+    except Exception as e:
+        print(e, server)
+        json_str = None
+
+    return json_str
+
+
+def convert_server_to_json_short(server:Server):
+    try:
+        response = {
+            'name': server.name,
+            'domain_name': server.domain.name,
+            'os_name': server.os_name.name,
+            'family': server.os_name.family,
+            'room_name': server.room.name,
+            'os_version': server.os_version,
+            'status': server.status,
+            'ip_addresses': [ip_addresses.ip_address for ip_addresses in
+                             server.ip_addresses.all()],
+        }
+
+        # dict_obj = get_all_fields(server)
+        # dict_obj = serializers.serialize('json', [server])
+        # print(dict_obj)
+        # json_str = json.dumps(dict_obj)
+
+        json_str = json.dumps(response)
+        # print(json_str)
+    except Exception as e:
+        print(e, server)
+        json_str = None
+
+    return json_str
+
+
+def convert_server_ip_to_json_short(server:Server):
+    try:
+        response = {
+            'name': server.name,
+            'domain_name': server.domain.name,
+            'ip_addresses': [ip_addresses.ip_address for ip_addresses in
+                             server.ip_addresses.all()],
+        }
         json_str = json.dumps(response)
         # print(json_str)
     except Exception as e:

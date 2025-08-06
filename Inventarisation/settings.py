@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-eis*6#=&no5k!5mr84^v7l!2b6cxm!tndq@fvm5t3#vy+*o5j+
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+#ALLOWED_HOSTS = ['inventory0101.bs.local.erc', 'inventory0201.bs.local.erc', 'inventory.bs.local.erc']
 # Application definition
 
 INSTALLED_APPS = [
@@ -92,7 +92,24 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
+# #    'new': {
+#     'default': {
+#     
+#             "ENGINE": "mssql",
+#             "NAME": "inventory",
+#             "USER": "inventory_user",
+#             "PASSWORD": "123456",
+#             "HOST": "BSPDL01.bs.local.erc",
+#     #        "HOST": "BSPDDB0101.bs.local.erc",
+#             "PORT": "1433",
+#            "CONN_MAX_AGE": 3600,
+#            "CONN_HEALTH_CHECKS": True,
+#             "OPTIONS": {"driver": "ODBC Driver 18 for SQL Server",
+#                                              "extra_params": "TrustServerCertificate=yes;MultiSubnetFailover=Yes;",
+#                                             },
+#         },
+
 }
 
 # Password validation
@@ -115,6 +132,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 
 LANGUAGE_CODE = 'ru-ru'
 
@@ -139,6 +159,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# See icons:
+# https://fonts.google.com/icons?icon.size=24&icon.color=%231f1f1f&icon.query=edit
+
 BATON = {
     'SITE_HEADER': 'Inventory',
     'SITE_TITLE': 'Inventory',
@@ -155,38 +178,38 @@ BATON = {
             'type': 'app',
             'name': 'reports',
             'label': 'Звіти',
-            'icon': 'fa fa-circle-info',
+            'icon': 'info',
         },
         {
             'type': 'app',
             'name': 'logview',
             'label': 'Журнал',
-            'icon': 'fa fa-bug',
+            'icon': 'adb',
         },
         {
             'type': 'app',
             'name': 'info',
             'label': 'Редактор',
-            'icon': 'fa fa-pen-to-square',
+            'icon': 'edit_square',
         },
         {
             'type': 'app',
             'name': 'dictionary',
             'label': 'Довідники',
-            'icon': 'fa fa-spell-check',
+            'icon': 'table_edit',
         },
         {
             'type': 'app',
             'name': 'admin',
             'label': 'Адміністрування',
-            'icon': 'fa fa-truck-fast',
+            'icon': 'delivery_truck_speed',
         },
 
         {
             'type': 'app',
             'name': 'auth',
             'label': 'Користувачі',
-            'icon': 'fa fa-lock',
+            'icon': 'lock',
         },
     ),
 }
@@ -194,6 +217,6 @@ BATON = {
 MAIL_SEND_REPORT={
     'server':'web01.local.erc',
     'port': 25,
-    'from_mail': 'bspd@erc.ua',
-    'to_mail': 'bspd@erc.ua',
+    'from_mail': 'Department_BSP@erc.ua',
+    'to_mail': 'BSPD_reports@erc.ua',
 }

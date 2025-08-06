@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.template.defaulttags import url
 from django.urls import path, include, re_path
 
+from info.views import get_servers_info, get_windows_ip
 from task_logger.views import view_process_message, view_get_csrf_token, process_host_info_json
 
 admin.site.site_header = 'Inventory Portal'
@@ -25,6 +26,8 @@ urlpatterns = [
     path('special', view_process_message),
     path('token', view_get_csrf_token),
     path('host_info_update', process_host_info_json),
+    path('api/server', get_servers_info),
+    path('api/windows_ips', get_windows_ip),
     path('', admin.site.urls),
     re_path(r'^_nested_admin/', include('nested_admin.urls')),
 ]

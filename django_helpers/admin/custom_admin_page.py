@@ -6,7 +6,7 @@ from django.db.models.options import Options
 
 from django_helpers.dmqs.manager import MemoryManager
 
-if django.get_version().startswith('4'):
+if django.get_version().startswith('4') or django.get_version().startswith('5'):
     from django.urls import re_path as url
 else:
     from django.conf.urls import url

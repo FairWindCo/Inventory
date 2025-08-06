@@ -5,3 +5,4 @@ __pycache__
 *.pyc
 *.pem
 /db.sqlite3
+igone.txt

@@ -132,6 +132,7 @@ class Command(BaseCommand):
             self_control_task, _ = TaskControl.objects.get_or_create(code=1, host=server_name)
             self_control_task.last_execute = now()
             self_control_task.status = 0
+            self_control_task.message = f"run self {now()} control on {platform.node()}"
             self_control_task.save()
         except Server.DoesNotExist:
             print(f"SERVER NOT FOUND {platform.node()}")
@@ -179,6 +180,7 @@ class Command(BaseCommand):
             if report:
                 send_mail_mime(report, MAIL_SEND_REPORT)
         except Exception as e:
+            print(e, self_control_task, self_control)
             if self_control_task:
                 self_control_task.last_execute = now()
                 self_control_task.status = 1

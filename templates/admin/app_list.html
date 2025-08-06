@@ -39,7 +39,10 @@
 
                         {% if model.admin_url and show_changelinks %}
                             {% if model.view_only %}
-                                <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                                <td><a href="{{ model.admin_url }}" class="">
+                                    <span class="material-symbols-outlined">
+multimodal_hand_eye
+</span>{% translate 'View' %}</a></td>
                             {% else %}
                                 <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
                             {% endif %}

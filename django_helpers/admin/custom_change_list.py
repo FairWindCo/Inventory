@@ -2,6 +2,7 @@ from datetime import timedelta
 from gettext import gettext
 from typing import Iterable, Dict
 
+import django
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import FieldListFilter
@@ -17,7 +18,12 @@ from django.db.models import Field, ManyToOneRel, OrderBy, F
 from django.db.models.base import Model
 from django.db.models.expressions import Combinable, OuterRef, Exists
 from django.urls import reverse
-from django.utils.datetime_safe import datetime
+
+if not django.get_version().startswith('5'):
+    from django.utils.datetime_safe import datetime
+else:
+    from datetime import datetime
+    
 from django.utils.http import urlencode
 from django.utils.timezone import make_aware
 from django.utils.translation import gettext_lazy as _
